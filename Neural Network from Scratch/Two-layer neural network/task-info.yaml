@@ -1,0 +1,28 @@
+type: edu
+files:
+  - name: student.py
+    visible: true
+    learner_created: false
+  - name: test/__init__.py
+    visible: false
+    learner_created: false
+  - name: test/tests.py
+    visible: false
+    learner_created: false
+  - name: tests.py
+    visible: false
+    learner_created: false
+  - name: Data/fashion-mnist_train.csv
+    visible: true
+    is_binary: true
+    learner_created: true
+  - name: Data/fashion-mnist_test.csv
+    visible: true
+    is_binary: true
+    learner_created: true
+feedback_link: https://hyperskill.org/learn/step/19183#comment
+status: Failed
+feedback:
+  message: "Wrong answer in test #1"
+  time: "Thu, 26 Sep 2024 21:04:40 UTC"
+record: 5
