@@ -1,6 +1,11 @@
 import numpy as np
+import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO_ROOT))
+
 from hstest import StageTest, TestCase, CheckResult
-from hstest.stage_test import List
 from utils.utils import get_list, full_check, custom_uniform
 
 np.random.uniform = custom_uniform
@@ -16,7 +21,7 @@ true_forward_res = [0.08145814974665896, 0.7078373861901438, 0.7880474359319048,
 
 class Tests5(StageTest):
 
-    def generate(self) -> List[TestCase]:
+    def generate(self):
         return [TestCase(time_limit=1000000)]
 
     def check(self, reply: str, attach):
