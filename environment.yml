@@ -17,4 +17,3 @@ dependencies:
       - ruff==0.6.9
       - mypy==1.11.2
       - hypothesis==6.112.1
-      - hs-test @ https://github.com/hyperskill/hs-test-python/archive/release.tar.gz
