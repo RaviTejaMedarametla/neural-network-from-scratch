@@ -9,13 +9,26 @@ import psutil
 
 from config import PrecisionConfig
 from student import NeuralNetwork
+from reproducibility import set_global_seed
+from energy_estimation import estimate_runtime_energy_j
 
 
 def _repo_root():
     return Path(__file__).resolve().parents[2]
 
 
+def _maybe_profile_model(model, precision_config, batch_size):
+    if not getattr(precision_config, "enable_profiling", False):
+        return None
+
+    from profiler import profile_model
+
+    report, output_file = profile_model(model=model, batch_size=batch_size, output_dir="profiling")
+    return {"report": report, "output_file": str(output_file)}
+
+
 def make_synthetic_data(n_samples, n_features, n_classes, seed=42):
+    set_global_seed(seed)
     rng = np.random.default_rng(seed)
     X = rng.normal(size=(n_samples, n_features)).astype(np.float32)
     y = rng.integers(0, n_classes, size=n_samples, dtype=np.int32)
@@ -82,13 +95,15 @@ def measure_batch_throughput(model, X, precision="float32", runs=5):
     return X.shape[0] / avg_time if avg_time > 0 else float("inf")
 
 
-def benchmark_one_setup(layer_sizes, activations, precision_mode, batch_size, n_samples=512, epochs=2, seed=42):
+def benchmark_one_setup(layer_sizes, activations, precision_mode, batch_size, n_samples=512, epochs=2, seed=42, enable_profiling=False):
+    set_global_seed(seed)
     n_features = layer_sizes[0]
     n_classes = layer_sizes[-1]
     X, y = make_synthetic_data(n_samples=n_samples, n_features=n_features, n_classes=n_classes, seed=seed)
 
-    cfg = PrecisionConfig(train_dtype="float32", infer_precision=precision_mode, seed=seed)
+    cfg = PrecisionConfig(train_dtype="float32", infer_precision=precision_mode, seed=seed, enable_profiling=enable_profiling)
     model = NeuralNetwork(layer_sizes=layer_sizes, activations=activations, precision_config=cfg)
+    profiling_payload = _maybe_profile_model(model, cfg, batch_size)
 
     def train_call():
         return measure_training_time_per_epoch(model, X, y, epochs=epochs, batch_size=batch_size, seed=seed)
@@ -98,8 +113,9 @@ def benchmark_one_setup(layer_sizes, activations, precision_mode, batch_size, n_
 
     latency = measure_inference_latency_per_sample(model, X, precision=precision_mode)
     throughput = measure_batch_throughput(model, X, precision=precision_mode)
+    energy_per_epoch = estimate_runtime_energy_j(time_per_epoch, precision_mode=precision_mode)
 
-    return {
+    result = {
         "seed": seed,
         "layer_sizes": "x".join(str(s) for s in layer_sizes),
         "precision_mode": precision_mode,
@@ -112,7 +128,13 @@ def benchmark_one_setup(layer_sizes, activations, precision_mode, batch_size, n_
         "peak_memory_mb": round(peak_memory_mb, 3),
         "cpu_utilization_percent": round(cpu_percent, 3),
         "final_train_accuracy": round(float(history["accuracy"][-1]), 6),
+        "energy_per_epoch_j": round(energy_per_epoch, 6),
     }
+
+    if profiling_payload is not None:
+        result["profiling_report"] = profiling_payload["output_file"]
+
+    return result
 
 
 def run_benchmarks(
@@ -124,8 +146,10 @@ def run_benchmarks(
     n_samples=512,
     epochs=2,
     seed=42,
+    enable_profiling=False,
 ):
     activations = ["relu", "softmax"] if activations is None else activations
+    set_global_seed(seed)
 
     results = []
     for layer_sizes in model_sizes:
@@ -139,6 +163,7 @@ def run_benchmarks(
                     n_samples=n_samples,
                     epochs=epochs,
                     seed=seed,
+                    enable_profiling=enable_profiling,
                 )
                 results.append(result)
 
