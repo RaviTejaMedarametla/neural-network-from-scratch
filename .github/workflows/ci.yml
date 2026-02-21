@@ -24,4 +24,5 @@ jobs:
             'Neural Network from Scratch/task/test/test_vectorized_model.py' \
             'Neural Network from Scratch/task/test/test_benchmark.py' \
             'Neural Network from Scratch/task/test/test_profiler_and_scaling.py' \
-            'Neural Network from Scratch/task/test/test_hardware_and_experiment_manager.py'
+            'Neural Network from Scratch/task/test/test_hardware_and_experiment_manager.py' \
+            'Neural Network from Scratch/task/test/test_deployment_onnx.py'
