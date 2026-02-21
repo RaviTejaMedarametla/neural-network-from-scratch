@@ -10,7 +10,7 @@ from typing import Any, Dict
 import numpy as np
 
 from config import EXPERIMENT_CONFIGS, PrecisionConfig
-from dataset_config import FASHION_MNIST_SPEC, ensure_dataset_ready, file_digest, load_dataset
+from dataset_config import DatasetSpec, FASHION_MNIST_SPEC, ensure_dataset_ready, file_digest, load_dataset
 from experiment_manager import ExperimentManager
 from reproducibility import get_rng, set_global_seed
 from student import NeuralNetwork
@@ -40,14 +40,21 @@ def _load_training_data(cfg: Dict[str, Any]) -> tuple[np.ndarray, np.ndarray]:
         print(f"[dataset] synthetic_mode=True, generated {n_samples} samples")
         return X, y
 
+    dataset_path = cfg.get("dataset_path", FASHION_MNIST_SPEC.train_path)
+    test_path = cfg.get("dataset_test_path", FASHION_MNIST_SPEC.test_path)
+    dataset_spec = DatasetSpec(
+        name=FASHION_MNIST_SPEC.name,
+        version=cfg.get("dataset_version", FASHION_MNIST_SPEC.version),
+        train_path=dataset_path,
+        test_path=test_path,
+    )
     ensure_dataset_ready(
-        spec=FASHION_MNIST_SPEC,
+        spec=dataset_spec,
         expected_features=int(cfg["layer_sizes"][0]),
         expected_min_rows=int(cfg.get("dataset_min_rows", 100)),
         auto_download=bool(cfg.get("dataset_auto_prepare", False)),
         expected_sha256=cfg.get("dataset_sha256"),
     )
-    dataset_path = cfg.get("dataset_path", FASHION_MNIST_SPEC.train_path)
     print(f"[dataset] loading {dataset_path}")
     return load_dataset(dataset_path)
 

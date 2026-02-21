@@ -102,6 +102,11 @@ Auto-prepare/download helper:
 ```bash
 python scripts/download_fashion_mnist.py --out-dir "Neural Network from Scratch/task/Data"
 ```
+Offline fallback (bundled example dataset):
+```bash
+python scripts/prepare_offline_dataset.py
+```
+Or set `FASHION_MNIST_LOCAL_DIR` to a local mirror containing the CSVs.
 
 ---
 
@@ -149,7 +154,7 @@ If torch is missing, PyTorch rows are explicitly marked `skipped`.
 ```bash
 python "Neural Network from Scratch/task/inference.py" --weights experiments/checkpoints/<ckpt>.npz --precision float32
 ```
-Optional ONNX export (requires torch):
+Optional ONNX export (requires `torch`, `onnx`, and `onnxruntime`):
 ```bash
 python "Neural Network from Scratch/task/inference.py" --weights experiments/checkpoints/<ckpt>.npz --export-onnx
 ```
@@ -169,7 +174,7 @@ python "Neural Network from Scratch/task/inference.py" --weights experiments/che
 
 - Simulated int8 is not hardware kernel int8 acceleration.
 - Energy is an estimator, not direct power-meter measurement.
-- ONNX export path requires torch.
+- ONNX export path requires torch + onnx + onnxruntime.
 - External dataset download may be blocked by network policy; synthetic baseline remains fully reproducible.
 
 ---

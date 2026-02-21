@@ -17,14 +17,12 @@ class ExperimentRecord:
     checkpoints: List[str] = field(default_factory=list)
 
 
-
-
 def _to_json_compatible(value):
     if hasattr(value, "item"):
         try:
             return value.item()
-        except Exception:
-            pass
+        except (TypeError, ValueError, AttributeError):
+            return value
     if isinstance(value, dict):
         return {k: _to_json_compatible(v) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
@@ -53,51 +51,23 @@ class ExperimentManager:
             return []
         return json.loads(history_path.read_text(encoding="utf-8"))
 
-    def start_experiment(
-        self,
-        config_name: str,
-        hyperparameters: Dict[str, Any],
-        metadata: Dict[str, Any],
-        experiment_id: Optional[str] = None,
-    ) -> ExperimentRecord:
+    def start_experiment(self, config_name: str, hyperparameters: Dict[str, Any], metadata: Dict[str, Any], experiment_id: Optional[str] = None) -> ExperimentRecord:
         exp_id = experiment_id or config_name.replace("/", "_").replace(".", "_")
         version = self._next_version(exp_id)
-
-        required_metadata = ["precision", "model_size", "dataset_version", "hardware_constraint_mode"]
-        for field_name in required_metadata:
+        for field_name in ["precision", "model_size", "dataset_version", "hardware_constraint_mode"]:
             metadata.setdefault(field_name, "unknown")
-
-        record = ExperimentRecord(
-            experiment_id=exp_id,
-            version=version,
-            created_at=datetime.utcnow().isoformat() + "Z",
-            config_name=config_name,
-            hyperparameters=hyperparameters,
-            metadata=metadata,
-        )
-        self.active_record = record
-        self._persist_record(record)
-        return record
+        record = ExperimentRecord(experiment_id=exp_id, version=version, created_at=datetime.utcnow().isoformat() + "Z", config_name=config_name, hyperparameters=hyperparameters, metadata=metadata)
+        self.active_record = record; self._persist_record(record); return record
 
     def log_metrics(self, metrics: Dict[str, List[float]]) -> None:
-        if self.active_record is None:
-            raise RuntimeError("No active experiment. Call start_experiment first.")
-        self.active_record.metrics = _to_json_compatible(metrics)
-        self._persist_record(self.active_record)
+        if self.active_record is None: raise RuntimeError("No active experiment. Call start_experiment first.")
+        self.active_record.metrics = _to_json_compatible(metrics); self._persist_record(self.active_record)
 
     def add_checkpoint(self, checkpoint_path: str) -> None:
-        if self.active_record is None:
-            raise RuntimeError("No active experiment. Call start_experiment first.")
-        self.active_record.checkpoints.append(checkpoint_path)
-        self._persist_record(self.active_record)
+        if self.active_record is None: raise RuntimeError("No active experiment. Call start_experiment first.")
+        self.active_record.checkpoints.append(checkpoint_path); self._persist_record(self.active_record)
 
     def _persist_record(self, record: ExperimentRecord) -> None:
-        history = self.read_history(record.experiment_id)
-        history = [entry for entry in history if int(entry.get("version", -1)) != record.version]
-        history.append(asdict(record))
-        history.sort(key=lambda item: int(item["version"]))
-
-        self._history_path(record.experiment_id).write_text(
-            json.dumps(history, indent=2),
-            encoding="utf-8",
-        )
+        history = [entry for entry in self.read_history(record.experiment_id) if int(entry.get("version", -1)) != record.version]
+        history.append(asdict(record)); history.sort(key=lambda item: int(item["version"]))
+        self._history_path(record.experiment_id).write_text(json.dumps(history, indent=2), encoding="utf-8")
