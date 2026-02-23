@@ -1,185 +1,98 @@
-# Neural Network from Scratch — Research-Grade, Hardware-Aware ML Stack
+# Hardware-Aware Neural Networks from Scratch
 
-This repository demonstrates a full **AI + hardware evaluation workflow** using a NumPy neural network core plus reproducible experiment infrastructure.
+A research engineering repository for studying deep learning performance under systems and hardware constraints using a NumPy-first implementation.
 
-It is designed for research-style questions such as:
-- How do precision modes (`float32`, `float16`, simulated `int8`) affect latency, memory, energy, and accuracy?
-- How does model depth and dataset scale change compute behavior?
-- How do constrained-memory scenarios alter feasible batch sizes and performance?
+## Motivation
 
----
+Edge and embedded inference systems operate under strict constraints:
+- **Semiconductor efficiency limits**: precision and memory bandwidth directly impact throughput per watt.
+- **Memory-latency trade-offs**: larger activation footprints reduce feasible batch size and increase wall-clock latency.
+- **Deployment realism**: model quality must be evaluated jointly with latency, memory, and estimated energy.
 
-## Why this matters for edge / semiconductor AI
+This project is organized to make those trade-offs measurable and reproducible.
 
-Modern edge AI systems are constrained by:
-- on-device memory,
-- throughput/latency targets,
-- power and energy budgets,
-- precision/quantization choices.
-
-This codebase links ML model behavior to these system-level constraints via benchmarking, profiling, stress testing, and deployment-oriented inference tooling.
-
----
-
-## System architecture (high-level)
+## Repository architecture
 
 ```mermaid
 flowchart LR
-  D[Dataset + Integrity Checks] --> T[Training + Experiment Tracking]
-  T --> B[Benchmark + Statistical Analysis]
-  T --> P[Profiler + Memory/Params]
-  T --> H[Hardware Simulation + Stress Tests]
-  T --> I[Inference + Export]
-  B --> R[Research Artifacts]
-  P --> R
-  H --> R
-  I --> R
+  A[Dataset Integrity Validation] --> B[Training and Checkpointing]
+  B --> C[Benchmarking]
+  B --> D[Profiling]
+  B --> E[Hardware Constraint Simulation]
+  C --> F[Statistical Analysis]
+  D --> G[Artifacts and Reports]
+  E --> G
+  F --> G
 ```
 
-## Training/inference model path
+## Project structure
 
-```mermaid
-flowchart TD
-  X[Input Batch] --> L1[Dense + Activation]
-  L1 --> L2[Dense + Activation]
-  L2 --> Y[Predictions]
-  Y --> Loss[MSE Loss]
-  Loss --> BP[Backprop]
-  BP --> W[Weights Update]
-```
+- `Neural Network from Scratch/task/`: model, training, inference, and hardware simulation modules.
+- `docs/`: reproducibility process, experiment templates, and study notes.
+- `experiments/`: run logs, checkpoints, and scaling outputs.
+- `artifacts/`: generated export location for publication-ready outputs.
+- `scripts/`: environment checks, dataset preparation, and workflow orchestration.
 
----
+## Standardized CLI workflow
 
-## Key components
-
-- Core NN: `Neural Network from Scratch/task/model.py`
-- Reproducibility: `task/reproducibility.py`
-- Dataset integrity + hashing: `task/dataset_config.py`
-- Training + experiment logging: `task/train.py`, `task/experiment_manager.py`
-- Benchmarking: `task/benchmark.py`
-- Statistical rigor + Pareto: `task/statistical_analysis.py`
-- Profiling: `task/profiler.py`
-- Hardware simulation: `task/hardware_simulation.py`, `task/hardware_stress_test.py`, `task/simulate_hardware.py`
-- Framework comparison: `task/compare.py`, `task/pytorch_model.py`
-- Deployment/inference: `task/deployment.py`, `task/inference.py`
-- Scaling studies: `task/scaling_study.py`, `task/run_scaling_experiments.py`
-
----
-
-## Reproducible environment setup
-
-### Pip
+### 1) Environment setup
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
-```
-
-### Conda
-```bash
-conda env create -f environment.yml
-conda activate nn-scratch-research
-```
-
-### Environment verification
-```bash
 python scripts/verify_environment.py
 ```
 
----
-
-## Dataset pipeline (real + synthetic)
-
-- **Default baseline** is synthetic for guaranteed end-to-end reproducibility: `--experiment baseline`.
-- **Real dataset pipeline**: `--experiment real_fashion_mnist`.
-- Real pipeline enforces:
-  - file existence,
-  - non-empty file,
-  - expected feature shape,
-  - minimum row count,
-  - optional SHA256 validation.
-
-Auto-prepare/download helper:
+### 2) Dataset preparation (optional for real-data experiments)
 ```bash
 python scripts/download_fashion_mnist.py --out-dir "Neural Network from Scratch/task/Data"
 ```
 
----
-
-## End-to-end workflow
-
-1) Training + tracking
+### 3) Reproducible end-to-end run
 ```bash
-python "Neural Network from Scratch/task/train.py" --experiment baseline
+python scripts/run_workflow.py --mode full --experiment baseline --stats-repeats 5
 ```
 
-2) Benchmarking
+### 4) Stage-specific runs
 ```bash
-python "Neural Network from Scratch/task/benchmark.py"
+python scripts/run_workflow.py --mode train --experiment real_fashion_mnist
+python scripts/run_workflow.py --mode benchmark --stats-repeats 7
 ```
 
-3) Statistical benchmarking (mean/std/95% CI + Pareto)
-```bash
-python "Neural Network from Scratch/task/statistical_analysis.py" --repeats 5
+## Reproducible experiment workflow
+
+1. Validate environment and dependency versions.
+2. Validate dataset integrity and optional SHA256 constraints.
+3. Execute training with fixed seed and explicit precision mode.
+4. Run benchmark and repeated statistical analysis.
+5. Archive logs, checkpoints, and figures in versioned directories.
+
+Detailed procedures are in `docs/reproduce.md` and `docs/reproducibility_checklist.md`.
+
+## Dataset integrity validation
+
+Dataset checks are built into the training path and include:
+- existence and non-empty file checks,
+- expected feature dimensionality validation,
+- minimum sample-count validation,
+- NaN and label-range checks,
+- optional SHA256 verification for immutable datasets.
+
+## Experiment tracking
+
+Training runs are tracked with structured metadata and checkpoints. Use `docs/experiment_tracking_template.md` to standardize result reporting across contributors.
+
+## Citation
+
+If you use this repository in research, cite it as software:
+
+```text
+Author(s). Hardware-Aware Neural Networks from Scratch. GitHub repository. Year. URL.
 ```
 
-4) Profiling
-```bash
-python "Neural Network from Scratch/task/profiler.py" --config "Neural Network from Scratch/task/config.py"
-```
+## Future research roadmap
 
-5) Hardware scenarios and stress
-```bash
-python "Neural Network from Scratch/task/simulate_hardware.py"
-python "Neural Network from Scratch/task/hardware_stress_test.py"
-```
-
-6) Scaling experiments
-```bash
-python "Neural Network from Scratch/task/scaling_study.py" --quick
-python "Neural Network from Scratch/task/run_scaling_experiments.py"
-```
-
-7) Framework comparison
-```bash
-python "Neural Network from Scratch/task/compare.py"
-```
-If torch is missing, PyTorch rows are explicitly marked `skipped`.
-
-8) Inference / deployment checks
-```bash
-python "Neural Network from Scratch/task/inference.py" --weights experiments/checkpoints/<ckpt>.npz --precision float32
-```
-Optional ONNX export (requires torch):
-```bash
-python "Neural Network from Scratch/task/inference.py" --weights experiments/checkpoints/<ckpt>.npz --export-onnx
-```
-
----
-
-## Hardware-aware studies included
-
-- Precision trade-offs: latency/memory/energy vs accuracy.
-- Low-memory and batch-limit stress runs.
-- Compute slowdown simulation.
-- Energy estimation (runtime-based + FLOPs-style helpers).
-
----
-
-## Limitations (explicit)
-
-- Simulated int8 is not hardware kernel int8 acceleration.
-- Energy is an estimator, not direct power-meter measurement.
-- ONNX export path requires torch.
-- External dataset download may be blocked by network policy; synthetic baseline remains fully reproducible.
-
----
-
-## Tests
-
-```bash
-python -m unittest \
-  "Neural Network from Scratch/task/test/test_vectorized_model.py" \
-  "Neural Network from Scratch/task/test/test_benchmark.py" \
-  "Neural Network from Scratch/task/test/test_profiler_and_scaling.py" \
-  "Neural Network from Scratch/task/test/test_hardware_and_experiment_manager.py"
-```
+- Integrate kernel-level quantization backends for true int8 execution studies.
+- Add cache-aware microbenchmarking for layerwise memory-access analysis.
+- Extend deployment path to heterogeneous CPU/NPU targets.
+- Incorporate power-meter-backed calibration for energy estimation.
+- Add experiment registry integration for multi-node result comparison.
