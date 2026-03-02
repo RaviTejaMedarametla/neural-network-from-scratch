@@ -27,7 +27,7 @@ PROFILE_OUTPUT_DIR = "profiling"
 
 
 def build_model():
-    from student import NeuralNetwork
+    from runtime_model import NeuralNetwork
 
     return NeuralNetwork(
         layer_sizes=LAYER_SIZES,

@@ -9,7 +9,7 @@ from typing import Dict, Tuple
 
 import numpy as np
 
-from student import NeuralNetwork
+from runtime_model import NeuralNetwork
 
 
 def export_numpy_checkpoint(model: NeuralNetwork, output_path: str) -> Path:

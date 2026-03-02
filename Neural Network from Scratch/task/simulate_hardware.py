@@ -8,7 +8,7 @@ from hardware_simulation import (
     run_training_with_hardware_constraints,
     save_hardware_log,
 )
-from student import NeuralNetwork
+from runtime_model import NeuralNetwork
 
 
 def make_synthetic_data(n_samples=256, n_features=32, n_classes=4, seed=42):

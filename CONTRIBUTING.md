@@ -1,28 +1,17 @@
 # Contributing Guidelines
 
 ## Scope
-This repository prioritizes hardware-aware deep learning engineering with reproducible, systems-oriented evaluation.
+Contributions should improve reliability, reproducibility, and observability of hardware-aware analytics workflows.
 
-## Development standards
-1. Keep modules small and single-purpose.
-2. Preserve deterministic defaults for experiments.
-3. Add tests for any behavioral change.
-4. Avoid committing generated artifacts (logs, checkpoints, binaries).
-5. Use concise, technical commit messages in imperative form.
+## Standards
+1. Keep behavior deterministic by default (seeded runs, stable configs).
+2. Preserve CLI compatibility unless a breaking change is explicitly approved.
+3. Add or update tests for behavioral changes.
+4. Avoid committing generated artifacts.
+5. Document assumptions and operational limits.
 
-## Workflow
-1. Create a feature branch.
-2. Run environment validation and tests.
-3. Update documentation for any CLI or workflow changes.
-4. Submit a pull request with motivation, methodology, and verification evidence.
-
-## Code style
-- Prefer explicit type-safe Python with clear function boundaries.
-- Keep naming consistent with existing task modules.
-- Do not add hidden fallbacks for failed integrity checks.
-
-## Review checklist
-- [ ] Tests updated and passing.
+## Pull request checklist
+- [ ] Unit/integration tests pass.
+- [ ] CI workflow remains green.
 - [ ] Reproducibility impact documented.
-- [ ] Dataset assumptions stated.
-- [ ] Hardware-related claims backed by benchmark output.
+- [ ] Hardware/performance claims backed by generated artifacts.

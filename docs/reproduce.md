@@ -1,56 +1,43 @@
-# Reproduce End-to-End Results
+# Reproduce Pipeline Results
 
-## 1) Environment
+Use these commands to run a deterministic analytics pipeline cycle end to end.
+
+## 1) Environment bootstrap
 ```bash
 pip install -r requirements-dev.txt
 python scripts/verify_environment.py
 ```
 
-## 2) Optional real dataset preparation
+## 2) Optional dataset download
 ```bash
 python scripts/download_fashion_mnist.py --out-dir "Neural Network from Scratch/task/Data"
 ```
 
-## 3) Deterministic baseline run (fully reproducible)
+## 3) Record run manifest
+```bash
+python scripts/write_run_manifest.py --experiment baseline --seed 42
+```
+
+## 4) Train baseline model
 ```bash
 python "Neural Network from Scratch/task/train.py" --experiment baseline
 ```
 
-## 4) Real dataset run (requires valid Fashion-MNIST CSV)
+## 5) Execute benchmark and statistical passes
 ```bash
-python "Neural Network from Scratch/task/train.py" --experiment real_fashion_mnist
+python "Neural Network from Scratch/task/benchmark.py" --seed 42
+python "Neural Network from Scratch/task/statistical_analysis.py" --repeats 5 --seed 42
+python "Neural Network from Scratch/task/benchmark_report.py" --input benchmarks/benchmark_results.csv --output benchmarks/benchmark_summary.csv
 ```
 
-## 5) Benchmark and statistical evaluation
-```bash
-python "Neural Network from Scratch/task/benchmark.py"
-python "Neural Network from Scratch/task/statistical_analysis.py" --repeats 5
-```
-
-## 6) Profiling, hardware scenarios, scaling
+## 6) Run profiling and hardware analysis
 ```bash
 python "Neural Network from Scratch/task/profiler.py" --config "Neural Network from Scratch/task/config.py"
-python "Neural Network from Scratch/task/simulate_hardware.py"
-python "Neural Network from Scratch/task/hardware_stress_test.py"
-python "Neural Network from Scratch/task/scaling_study.py" --quick
+python "Neural Network from Scratch/task/hardware_analysis_report.py" --benchmark-csv benchmarks/benchmark_results.csv --profile-json profiling/profile_neuralnetwork.json --output-dir hardware_results
 ```
 
-## 7) Framework comparison and deployment checks
+## 7) Validate deployment compatibility
 ```bash
-python "Neural Network from Scratch/task/compare.py"
 python "Neural Network from Scratch/task/inference.py" --weights experiments/checkpoints/<ckpt>.npz --precision float32
+python "Neural Network from Scratch/task/compare.py"
 ```
-
-## 8) Artifacts to verify
-- `experiments/logs/`
-- `experiments/checkpoints/`
-- `benchmarks/benchmark_results.csv`
-- `benchmarks/comparison/`
-- `benchmarks/statistical/`
-- `experiments/scaling/`
-- `hardware_results/`
-- `profiling/`
-
-## Notes
-- PyTorch comparison and ONNX export are skipped/guarded when torch is unavailable.
-- Dataset integrity failures are explicit by design (no silent fallback unless synthetic mode is enabled).

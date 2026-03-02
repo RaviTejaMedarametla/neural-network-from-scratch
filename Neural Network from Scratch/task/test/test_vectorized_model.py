@@ -7,7 +7,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from config import PrecisionConfig
-from student import TwoLayerNeural
+from runtime_model import TwoLayerNeural
 
 
 class VectorizedModelTests(unittest.TestCase):

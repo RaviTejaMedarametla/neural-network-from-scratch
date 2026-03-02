@@ -12,7 +12,7 @@ import numpy as np
 
 from benchmark import make_synthetic_data, measure_inference_latency_per_sample, measure_batch_throughput
 from config import PrecisionConfig
-from student import NeuralNetwork
+from runtime_model import NeuralNetwork
 from reproducibility import set_global_seed
 from energy_estimation import estimate_runtime_energy_j
 

@@ -11,7 +11,7 @@ import numpy as np
 from config import PrecisionConfig
 from hardware_simulation import config_from_precision_config, run_training_with_hardware_constraints
 from reproducibility import set_global_seed
-from student import NeuralNetwork
+from runtime_model import NeuralNetwork
 
 
 def run_stress(output_path: Path) -> None:

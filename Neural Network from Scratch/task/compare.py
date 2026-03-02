@@ -21,7 +21,7 @@ from benchmark import (
 from config import PrecisionConfig
 from pytorch_model import TorchNeuralNetwork, is_torch_available
 from reproducibility import set_global_seed
-from student import NeuralNetwork
+from runtime_model import NeuralNetwork
 
 
 def _repo_root():

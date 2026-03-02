@@ -191,6 +191,7 @@ def _save_pareto_plot(summary_rows: List[Dict[str, float]], out_dir: Path) -> No
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run statistical benchmarks with repeated runs")
     parser.add_argument("--repeats", type=int, default=5)
+    parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
     rows = run_repeated_benchmarks(
@@ -201,7 +202,7 @@ def main() -> None:
         n_samples=256,
         epochs=2,
         repeats=args.repeats,
-        seed=42,
+        seed=args.seed,
     )
     print(f"Saved statistical benchmark artifacts for {len(rows)} precision modes")
 

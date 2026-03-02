@@ -7,7 +7,7 @@ import numpy as np
 from config import PrecisionConfig
 from profiler import profile_model
 from scaling_study import ScalingConfig, run_scaling_study
-from student import NeuralNetwork
+from runtime_model import NeuralNetwork
 
 
 class ProfilerAndScalingTests(unittest.TestCase):
