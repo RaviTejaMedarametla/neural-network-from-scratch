@@ -1,4 +1,5 @@
 import csv
+import argparse
 import threading
 import time
 import tracemalloc
@@ -181,11 +182,18 @@ def run_benchmarks(
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run benchmark sweep for predefined model/precision settings")
+    parser.add_argument("--seed", type=int, default=42, help="Global seed for reproducible benchmark generation")
+    parser.add_argument("--output-csv", default="benchmark_results.csv", help="Output CSV filename under benchmarks/")
+    args = parser.parse_args()
+
     path, rows = run_benchmarks(
         batch_sizes=[16, 32],
         precision_modes=["float32", "float16", "int8"],
         model_sizes=[[16, 32, 4], [16, 64, 4]],
         n_samples=256,
         epochs=1,
+        seed=args.seed,
+        output_csv=args.output_csv,
     )
     print(f"Saved {len(rows)} benchmark rows to {path}")
