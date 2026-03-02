@@ -1,17 +1,17 @@
 # Experiment Tracking Template
 
-Use this template in lab notebooks, issues, or reports.
+Use this template for experiment notes, issue reports, and result handoff.
 
 ## Metadata
 - Experiment ID:
 - Date/time (UTC):
-- Author:
 - Commit SHA:
-- System profile (CPU/RAM/OS):
+- System profile (CPU / RAM / OS):
+- Runtime constraints (single process, background load notes):
 
 ## Configuration
-- Dataset:
-- Dataset SHA256:
+- Dataset and version:
+- Dataset SHA256 (if applicable):
 - Model architecture (layer sizes, activations):
 - Precision mode:
 - Hyperparameters (`epochs`, `alpha`, `batch_size`, `seed`):
@@ -20,18 +20,27 @@ Use this template in lab notebooks, issues, or reports.
 - Final training loss:
 - Final validation loss:
 - Final validation accuracy:
-- Training time (s):
+- Training time per epoch (s):
 - Inference latency (ms/sample):
-- Memory estimate (MB):
-- Energy estimate (relative units or J estimate):
+- Throughput (samples/s):
+- Peak memory (MB):
+- Estimated energy per epoch (J or relative units):
+
+## Hardware analysis
+- Layer-wise parameter/memory table path:
+- Precision trade-off table path:
+- Dominant bottleneck observed (compute, memory, or I/O):
+- Failure mode observed (if any):
 
 ## Artifacts
+- Manifest file:
 - Log file:
 - Checkpoint path:
 - Benchmark CSV:
-- Statistical plots:
+- Statistical summary:
+- Plots:
 
-## Notes
-- Deviations from baseline:
-- Failure modes / constraints observed:
-- Next action:
+## Assumptions and limitations
+- Assumptions during run:
+- Limitations affecting interpretation:
+- Follow-up validation required:
