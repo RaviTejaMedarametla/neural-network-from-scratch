@@ -11,7 +11,7 @@ import numpy as np
 from config import PrecisionConfig
 from deployment import export_onnx_from_pytorch, inference_report
 from reproducibility import set_global_seed
-from student import NeuralNetwork
+from runtime_model import NeuralNetwork
 
 
 def _load_npz_weights(model: NeuralNetwork, weights_path: str) -> None:

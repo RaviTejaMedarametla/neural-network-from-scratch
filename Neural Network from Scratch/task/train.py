@@ -13,7 +13,7 @@ from config import EXPERIMENT_CONFIGS, PrecisionConfig
 from dataset_config import FASHION_MNIST_SPEC, ensure_dataset_ready, file_digest, load_dataset
 from experiment_manager import ExperimentManager
 from reproducibility import get_rng, set_global_seed
-from student import NeuralNetwork
+from runtime_model import NeuralNetwork
 
 
 def _resolve_experiment_config(config_name: str) -> Dict[str, Any]:

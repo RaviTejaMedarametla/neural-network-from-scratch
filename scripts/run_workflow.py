@@ -35,12 +35,25 @@ def main() -> None:
         default=5,
         help="Repeats for statistical analysis",
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Global seed forwarded to benchmark and statistical analysis steps",
+    )
     args = parser.parse_args()
 
     python = sys.executable
     train_cmd = [python, str(TASK_DIR / "train.py"), "--experiment", args.experiment]
-    benchmark_cmd = [python, str(TASK_DIR / "benchmark.py")]
-    stats_cmd = [python, str(TASK_DIR / "statistical_analysis.py"), "--repeats", str(args.stats_repeats)]
+    benchmark_cmd = [python, str(TASK_DIR / "benchmark.py"), "--seed", str(args.seed)]
+    stats_cmd = [
+        python,
+        str(TASK_DIR / "statistical_analysis.py"),
+        "--repeats",
+        str(args.stats_repeats),
+        "--seed",
+        str(args.seed),
+    ]
 
     if args.mode == "train":
         run_step(train_cmd)
