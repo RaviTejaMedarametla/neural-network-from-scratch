@@ -1,92 +1,79 @@
-# Hardware-Aware Neural Networks from Scratch
+# Hardware-Aware Neural Network Systems
 
-NumPy-first reference implementation for training and evaluating a small feed-forward network under latency, memory, and precision constraints.
+## Overview
+This repository implements a deterministic, NumPy-first machine learning workflow for training and evaluating a compact feed-forward network under memory, latency, and numerical precision constraints. It is maintained as part of a broader AI systems engineering portfolio focused on hardware-aware machine learning, edge AI optimization, deterministic ML pipelines, and production ML systems.
 
-## Scope
-
-The repository focuses on repeatable CPU-oriented experiments that expose system-level trade-offs:
-- parameter count vs. memory footprint,
-- numerical precision vs. throughput and accuracy,
-- batch size vs. latency and peak memory,
-- deployment format compatibility vs. runtime overhead.
-
-The goal is to provide an inspectable baseline for architecture and systems experiments, not a production training framework.
-
-## Repository architecture
-
+## System Architecture
 ```mermaid
 flowchart LR
-  A[Dataset integrity validation] --> B[Training and checkpointing]
+  A[Dataset validation] --> B[Training and checkpointing]
   B --> C[Benchmarking]
   B --> D[Profiling]
-  B --> E[Hardware constraint simulation]
+  B --> E[Hardware-constraint simulation]
   C --> F[Statistical aggregation]
   D --> G[Artifacts and reports]
   E --> G
   F --> G
 ```
 
-## Project structure
-
+Core layout:
 - `Neural Network from Scratch/task/`: model, training, inference, profiling, simulation, and evaluation modules.
-- `docs/`: reproducibility guidance, reporting templates, and hardware-analysis notes.
-- `experiments/`: run logs, checkpoints, scaling outputs, and experiment metadata.
-- `artifacts/`: placeholder for generated deliverables.
-- `scripts/`: environment checks, dataset retrieval, and end-to-end workflow orchestration.
+- `scripts/`: environment validation, dataset retrieval, and workflow orchestration.
+- `docs/`: reproducibility, experiment tracking, and hardware-analysis references.
+- `experiments/`: checkpoints, manifests, and experiment outputs.
+- `artifacts/`: generated deliverables.
+- `benchmarks/`: benchmark comparison and statistical summary directories.
 
-## CLI workflow
+## Features
+- Deterministic training and evaluation flow with explicit experiment controls.
+- Hardware-aware analysis for memory footprint, latency, and precision behavior.
+- Built-in benchmarking, profiling, and experiment tracking utilities.
+- Optional interoperability checks for ONNX export and PyTorch comparison paths.
+- Scripted workflow execution to support repeatable local and CI runs.
 
-### 1) Environment setup
+## Installation
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
 python scripts/verify_environment.py
 ```
 
-### 2) Dataset preparation (optional)
+## Usage
+Prepare Fashion-MNIST data (optional if dataset already exists):
 ```bash
 python scripts/download_fashion_mnist.py --out-dir "Neural Network from Scratch/task/Data"
 ```
 
-### 3) End-to-end run
+Run the complete workflow:
 ```bash
 python scripts/run_workflow.py --mode full --experiment baseline --stats-repeats 5
 ```
 
-### 4) Stage-specific runs
+Run selected pipeline phases:
 ```bash
 python scripts/run_workflow.py --mode train --experiment real_fashion_mnist
 python scripts/run_workflow.py --mode benchmark --stats-repeats 7
 ```
 
-## Design motivations and trade-offs
-
-- **NumPy implementation**: easier debugging and transparent tensor movement, with lower raw performance than optimized kernels.
-- **Synthetic + optional real dataset path**: deterministic smoke testing and CI compatibility, with limited representativeness for production data distributions.
-- **Precision simulation (`float32`, `float16`, `int8`)**: enables comparative studies without specialized hardware, but does not replace native low-precision kernel behavior.
-- **Single-process execution**: simplifies reproducibility; does not model distributed training contention.
-
-## Assumptions
-
-- CPU execution is the default evaluation target.
-- Dataset schema matches the expected Fashion-MNIST CSV layout when real-data mode is used.
-- Experiments are run with explicit seeds and fixed dependency versions.
-
-## Limitations
-
-- Accuracy and energy values are indicative for this architecture and software stack only.
-- Reported latency includes Python overhead and is sensitive to host scheduling noise.
-- ONNX export and PyTorch comparison are optional paths guarded by dependency checks.
-
-## Failure modes and bottlenecks
-
-- Invalid dataset shape/range fails integrity checks and blocks training by design.
-- Memory pressure increases with batch size and hidden-layer width; this appears as allocation spikes during forward/backward passes.
-- Profiling output is model-structure aware but does not include microarchitectural counters.
-
-## Reproducibility references
-
+## Reproducibility
+Reproducibility guidance and templates:
 - `docs/reproduce.md`
 - `docs/reproducibility_checklist.md`
 - `docs/experiment_tracking_template.md`
 - `docs/hardware_aware_study.md`
+
+Reproducibility assumptions:
+- CPU execution is the default target.
+- Input schema must match expected Fashion-MNIST CSV format when using real-data mode.
+- Experiment runs should use explicit seeds and pinned dependencies.
+
+## Related Projects
+This repository is part of a larger AI systems engineering portfolio:
+- `neural-network-systems`
+- `digit-classification-benchmark`
+- `edge-ai-model-optimization`
+- `hospital-analytics-pipeline`
+- `nba-data-engineering`
+- `ai-systems-ml-platform`
+
+> Repository naming note: if this repository is still named `neural-network-from-scratch`, a professional rename to `neural-network-systems` is recommended and should be performed manually in GitHub repository settings.

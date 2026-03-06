@@ -23,3 +23,10 @@ profiling/
 # Experiment outputs
 experiments/checkpoints/
 experiments/logs/
+
+# Notebook and logs
+.ipynb_checkpoints/
+*.log
+
+# Optional local output folders
+outputs/
