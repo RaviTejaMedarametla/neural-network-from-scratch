@@ -1,77 +1,126 @@
-# Hardware-Aware Neural Network Systems
+# Hardware-Aware Neural Network Pipeline from Scratch
+
+A reproducible, NumPy-based machine learning system for training and evaluating compact neural networks under practical hardware constraints.
 
 ## Overview
-This repository implements a deterministic, NumPy-first machine learning workflow for training and evaluating a compact feed-forward network under memory, latency, and numerical precision constraints. It is maintained as part of a broader AI systems engineering portfolio focused on hardware-aware machine learning, edge AI optimization, deterministic ML pipelines, and production ML systems.
+This repository implements an end-to-end workflow for supervised image classification using a feed-forward neural network developed from first principles. The system emphasizes deterministic execution, structured experiment management, and quantitative evaluation across performance dimensions such as latency, memory usage, and numerical behavior.
+
+The project addresses a common systems challenge in machine learning: model quality alone is insufficient when deployment targets operate under constrained compute or memory budgets. By combining training, benchmarking, profiling, and hardware-constraint simulation in a single workflow, the repository supports technically grounded, reproducible experimentation suitable for research-oriented engineering.
+
+## Project Motivation
+Modern ML applications increasingly require models that are not only accurate but also efficient and predictable in resource-constrained settings. This project is motivated by three practical research needs: (1) evaluating model behavior under explicit hardware limits, (2) reducing ambiguity in experimental outcomes through deterministic setup and repeatable workflows, and (3) creating a transparent baseline implementation that can be extended for systems-level optimization studies.
 
 ## System Architecture
-```mermaid
-flowchart LR
-  A[Dataset validation] --> B[Training and checkpointing]
-  B --> C[Benchmarking]
-  B --> D[Profiling]
-  B --> E[Hardware-constraint simulation]
-  C --> F[Statistical aggregation]
-  D --> G[Artifacts and reports]
-  E --> G
-  F --> G
-```
+The repository is organized as a modular pipeline with five core components:
 
-Core layout:
-- `Neural Network from Scratch/task/`: model, training, inference, profiling, simulation, and evaluation modules.
-- `scripts/`: environment validation, dataset retrieval, and workflow orchestration.
-- `docs/`: reproducibility, experiment tracking, and hardware-analysis references.
-- `experiments/`: checkpoints, manifests, and experiment outputs.
-- `artifacts/`: generated deliverables.
-- `benchmarks/`: benchmark comparison and statistical summary directories.
+- **Data Pipeline**  
+  Handles dataset retrieval, validation, and preprocessing inputs for training and evaluation workflows.
+
+- **Model Training**  
+  Implements training loops, checkpointing, and configurable experiment execution for a compact feed-forward network.
+
+- **Model Compression / Constraint Simulation**  
+  Includes tools for studying numerical precision and hardware-related constraints that influence deployability.
+
+- **Hardware-Aware Evaluation**  
+  Provides benchmarking and profiling paths to measure runtime behavior, memory footprint, and stability across repeated runs.
+
+- **Inference and Artifacts**  
+  Produces outputs, manifests, and reports to support experiment tracking and downstream analysis.
+
+## Repository Structure
+- `Neural Network from Scratch/task/`  
+  Core implementation: model components, training logic, inference utilities, profiling, and evaluation modules.
+
+- `scripts/`  
+  Command-line utilities for environment validation, dataset acquisition, workflow execution, and run-manifest generation.
+
+- `docs/`  
+  Reproducibility guides, experiment documentation, and hardware-aware study references.
+
+- `experiments/`  
+  Experiment manifests, scaling runs, and organized run outputs.
+
+- `benchmarks/`  
+  Benchmark comparison outputs and statistical summaries.
+
+- `artifacts/`  
+  Generated deliverables and report-oriented outputs.
+
+- `utils/`  
+  Supporting utilities used by pipeline components.
 
 ## Features
-- Deterministic training and evaluation flow with explicit experiment controls.
-- Hardware-aware analysis for memory footprint, latency, and precision behavior.
-- Built-in benchmarking, profiling, and experiment tracking utilities.
-- Optional interoperability checks for ONNX export and PyTorch comparison paths.
-- Scripted workflow execution to support repeatable local and CI runs.
+- Deterministic training and evaluation workflows with explicit run controls.
+- Hardware-aware benchmarking for latency, memory, and precision-oriented analysis.
+- Scripted experiment orchestration for reproducible execution.
+- Structured experiment artifacts and manifest generation for traceability.
+- Optional interoperability checks aligned with export and framework-comparison workflows.
 
 ## Installation
+Install runtime and development dependencies:
+
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
+```
+
+Validate the local environment:
+
+```bash
 python scripts/verify_environment.py
 ```
 
 ## Usage
-Prepare Fashion-MNIST data (optional if dataset already exists):
+Download Fashion-MNIST data (if not already available):
+
 ```bash
 python scripts/download_fashion_mnist.py --out-dir "Neural Network from Scratch/task/Data"
 ```
 
 Run the complete workflow:
+
 ```bash
 python scripts/run_workflow.py --mode full --experiment baseline --stats-repeats 5
 ```
 
-Run selected pipeline phases:
+Run selected phases:
+
 ```bash
 python scripts/run_workflow.py --mode train --experiment real_fashion_mnist
 python scripts/run_workflow.py --mode benchmark --stats-repeats 7
 ```
 
 ## Reproducibility
-Reproducibility guidance and templates:
+This repository is designed for repeatable experimentation through:
+
+- **Configuration-driven execution** via workflow arguments and run manifests.
+- **Deterministic controls** through explicit seeds and pinned dependencies.
+- **Experiment artifacts** stored in dedicated directories for auditability and reruns.
+
+For detailed reproducibility guidance, see:
 - `docs/reproduce.md`
 - `docs/reproducibility_checklist.md`
 - `docs/experiment_tracking_template.md`
 - `docs/hardware_aware_study.md`
 
-Reproducibility assumptions:
-- CPU execution is the default target.
-- Input schema must match expected Fashion-MNIST CSV format when using real-data mode.
-- Experiment runs should use explicit seeds and pinned dependencies.
-
 ## Related Projects
-This repository is part of a larger AI systems engineering portfolio:
-- `neural-network-systems`
-- `digit-classification-benchmark`
-- `edge-ai-model-optimization`
-- `hospital-analytics-pipeline`
-- `nba-data-engineering`
-- `ai-systems-ml-platform`
+This repository is part of a broader portfolio focused on hardware-aware machine learning, edge AI optimization, deterministic ML pipelines, and production-oriented ML systems.
+
+Related repositories:
+- `neural-network-from-scratch`
+- `classification-of-handwritten-digits1`
+- `edge-ai-hardware-optimization`
+- `data-analysis-for-hospitals`
+- `nba-data-preprocessing`
+- `Data-Science-AI-Portfolio`
+
+## Future Work
+Potential extensions include:
+
+- Deployment-focused validation on embedded or edge hardware targets.
+- Additional compression and quantization strategies for resource-limited inference.
+- Expanded benchmarking frameworks with broader workload and platform coverage.
+
+## License
+This project is licensed under the terms specified in the [LICENSE](LICENSE) file.
