@@ -75,5 +75,3 @@ This repository is part of a larger AI systems engineering portfolio:
 - `hospital-analytics-pipeline`
 - `nba-data-engineering`
 - `ai-systems-ml-platform`
-
-> Repository naming note: if this repository is still named `neural-network-from-scratch`, a professional rename to `neural-network-systems` is recommended and should be performed manually in GitHub repository settings.
