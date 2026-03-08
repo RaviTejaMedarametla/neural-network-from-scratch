@@ -8,10 +8,10 @@ from pathlib import Path
 import numpy as np
 import psutil
 
-from config import PrecisionConfig
-from student import NeuralNetwork
-from reproducibility import set_global_seed
-from energy_estimation import estimate_runtime_energy_j
+from neural_network_from_scratch.config import PrecisionConfig
+from neural_network_from_scratch.student import NeuralNetwork
+from neural_network_from_scratch.reproducibility import set_global_seed
+from neural_network_from_scratch.energy_estimation import estimate_runtime_energy_j
 
 
 def _repo_root():
@@ -22,7 +22,7 @@ def _maybe_profile_model(model, precision_config, batch_size):
     if not getattr(precision_config, "enable_profiling", False):
         return None
 
-    from profiler import profile_model
+    from neural_network_from_scratch.profiler import profile_model
 
     report, output_file = profile_model(model=model, batch_size=batch_size, output_dir="profiling")
     return {"report": report, "output_file": str(output_file)}

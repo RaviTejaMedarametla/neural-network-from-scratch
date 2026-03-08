@@ -29,7 +29,7 @@ The repository is organized as a modular pipeline with five core components:
   Produces outputs, manifests, and reports to support experiment tracking and downstream analysis.
 
 ## Repository Structure
-- `Neural Network from Scratch/task/`  
+- `neural_network_from_scratch/`  
   Core implementation: model components, training logic, inference utilities, profiling, and evaluation modules.
 
 - `scripts/`  
@@ -75,7 +75,7 @@ python scripts/verify_environment.py
 Download Fashion-MNIST data (if not already available):
 
 ```bash
-python scripts/download_fashion_mnist.py --out-dir "Neural Network from Scratch/task/Data"
+python scripts/download_fashion_mnist.py --out-dir "neural_network_from_scratch/Data"
 ```
 
 Run the complete workflow:

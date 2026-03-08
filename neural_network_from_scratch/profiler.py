@@ -54,7 +54,7 @@ def _build_model_from_config(config_module):
         return model_class(**model_kwargs)
 
     if hasattr(config_module, "LAYER_SIZES") and hasattr(config_module, "ACTIVATIONS"):
-        from student import NeuralNetwork
+        from neural_network_from_scratch.student import NeuralNetwork
 
         return NeuralNetwork(
             layer_sizes=list(config_module.LAYER_SIZES),

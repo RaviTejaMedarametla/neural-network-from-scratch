@@ -9,7 +9,7 @@ from typing import Dict, Tuple
 
 import numpy as np
 
-from student import NeuralNetwork
+from neural_network_from_scratch.student import NeuralNetwork
 
 
 def export_numpy_checkpoint(model: NeuralNetwork, output_path: str) -> Path:
@@ -20,7 +20,7 @@ def export_numpy_checkpoint(model: NeuralNetwork, output_path: str) -> Path:
 
 
 def export_onnx_from_pytorch(layer_sizes, activations, output_path: str) -> str:
-    from pytorch_model import TorchNeuralNetwork, is_torch_available
+    from neural_network_from_scratch.pytorch_model import TorchNeuralNetwork, is_torch_available
 
     if not is_torch_available():
         raise RuntimeError("Cannot export ONNX because torch is not installed")
@@ -53,7 +53,7 @@ def export_onnx_from_pytorch(layer_sizes, activations, output_path: str) -> str:
 def validate_onnx_export(layer_sizes, activations, onnx_path: str, seed: int = 42) -> Tuple[bool, float]:
     import onnxruntime as ort
 
-    from pytorch_model import TorchNeuralNetwork
+    from neural_network_from_scratch.pytorch_model import TorchNeuralNetwork
 
     rng = np.random.default_rng(seed)
     x = rng.normal(loc=0.0, scale=1.0, size=(3, layer_sizes[0])).astype(np.float32)
