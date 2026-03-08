@@ -3,10 +3,10 @@ import sys
 import unittest
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from deployment import export_onnx_from_pytorch, validate_onnx_export
+from neural_network_from_scratch.deployment import export_onnx_from_pytorch, validate_onnx_export
 
 
 def _is_available(module_name: str) -> bool:

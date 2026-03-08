@@ -4,10 +4,10 @@ from pathlib import Path
 
 import numpy as np
 
-from config import PrecisionConfig
-from profiler import profile_model
-from scaling_study import ScalingConfig, run_scaling_study
-from student import NeuralNetwork
+from neural_network_from_scratch.config import PrecisionConfig
+from neural_network_from_scratch.profiler import profile_model
+from neural_network_from_scratch.scaling_study import ScalingConfig, run_scaling_study
+from neural_network_from_scratch.student import NeuralNetwork
 
 
 class ProfilerAndScalingTests(unittest.TestCase):

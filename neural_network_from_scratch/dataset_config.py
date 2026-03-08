@@ -27,8 +27,8 @@ class DatasetSpec:
 FASHION_MNIST_SPEC = DatasetSpec(
     name="fashion-mnist",
     version="v1",
-    train_path="Neural Network from Scratch/task/Data/fashion-mnist_train.csv",
-    test_path="Neural Network from Scratch/task/Data/fashion-mnist_test.csv",
+    train_path="neural_network_from_scratch/Data/fashion-mnist_train.csv",
+    test_path="neural_network_from_scratch/Data/fashion-mnist_test.csv",
 )
 
 

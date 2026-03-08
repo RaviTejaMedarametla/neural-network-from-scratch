@@ -8,10 +8,9 @@ from pathlib import Path
 import sys
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-TASK_DIR = REPO_ROOT / "Neural Network from Scratch" / "task"
-sys.path.insert(0, str(TASK_DIR))
+sys.path.insert(0, str(REPO_ROOT))
 
-from dataset_config import FASHION_MNIST_SPEC, download_fashion_mnist  # noqa: E402
+from neural_network_from_scratch.dataset_config import FASHION_MNIST_SPEC, download_fashion_mnist  # noqa: E402
 
 
 def main() -> None:

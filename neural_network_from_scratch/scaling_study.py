@@ -10,11 +10,11 @@ from typing import Dict, List
 import matplotlib.pyplot as plt
 import numpy as np
 
-from benchmark import make_synthetic_data, measure_inference_latency_per_sample, measure_batch_throughput
-from config import PrecisionConfig
-from student import NeuralNetwork
-from reproducibility import set_global_seed
-from energy_estimation import estimate_runtime_energy_j
+from neural_network_from_scratch.benchmark import make_synthetic_data, measure_inference_latency_per_sample, measure_batch_throughput
+from neural_network_from_scratch.config import PrecisionConfig
+from neural_network_from_scratch.student import NeuralNetwork
+from neural_network_from_scratch.reproducibility import set_global_seed
+from neural_network_from_scratch.energy_estimation import estimate_runtime_energy_j
 
 
 @dataclass

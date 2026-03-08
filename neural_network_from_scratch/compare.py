@@ -11,17 +11,17 @@ from typing import Dict, List
 import matplotlib.pyplot as plt
 import numpy as np
 
-from benchmark import (
+from neural_network_from_scratch.benchmark import (
     _measure_peak_memory_mb,
     make_synthetic_data,
     measure_batch_throughput,
     measure_inference_latency_per_sample,
     measure_training_time_per_epoch,
 )
-from config import PrecisionConfig
-from pytorch_model import TorchNeuralNetwork, is_torch_available
-from reproducibility import set_global_seed
-from student import NeuralNetwork
+from neural_network_from_scratch.config import PrecisionConfig
+from neural_network_from_scratch.pytorch_model import TorchNeuralNetwork, is_torch_available
+from neural_network_from_scratch.reproducibility import set_global_seed
+from neural_network_from_scratch.student import NeuralNetwork
 
 
 def _repo_root():

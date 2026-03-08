@@ -11,8 +11,7 @@ REQUIRED = ["numpy", "matplotlib", "psutil", "requests", "tqdm"]
 OPTIONAL = ["torch", "pytest"]
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-TASK_DIR = REPO_ROOT / "Neural Network from Scratch" / "task"
-sys.path.insert(0, str(TASK_DIR))
+sys.path.insert(0, str(REPO_ROOT))
 
 
 def check_module(name: str) -> str:
@@ -26,7 +25,7 @@ def check_module(name: str) -> str:
 
 def dataset_status() -> str:
     try:
-        from dataset_config import FASHION_MNIST_SPEC
+        from neural_network_from_scratch.dataset_config import FASHION_MNIST_SPEC
 
         train = Path(FASHION_MNIST_SPEC.train_path)
         test = Path(FASHION_MNIST_SPEC.test_path)

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from dataset_config import FASHION_MNIST_SPEC
+from neural_network_from_scratch.dataset_config import FASHION_MNIST_SPEC
 
 
 @dataclass
@@ -27,7 +27,7 @@ PROFILE_OUTPUT_DIR = "profiling"
 
 
 def build_model():
-    from student import NeuralNetwork
+    from neural_network_from_scratch.student import NeuralNetwork
 
     return NeuralNetwork(
         layer_sizes=LAYER_SIZES,

@@ -9,11 +9,11 @@ from typing import Any, Dict
 
 import numpy as np
 
-from config import EXPERIMENT_CONFIGS, PrecisionConfig
-from dataset_config import FASHION_MNIST_SPEC, ensure_dataset_ready, file_digest, load_dataset
-from experiment_manager import ExperimentManager
-from reproducibility import get_rng, set_global_seed
-from student import NeuralNetwork
+from neural_network_from_scratch.config import EXPERIMENT_CONFIGS, PrecisionConfig
+from neural_network_from_scratch.dataset_config import FASHION_MNIST_SPEC, ensure_dataset_ready, file_digest, load_dataset
+from neural_network_from_scratch.experiment_manager import ExperimentManager
+from neural_network_from_scratch.reproducibility import get_rng, set_global_seed
+from neural_network_from_scratch.student import NeuralNetwork
 
 
 def _resolve_experiment_config(config_name: str) -> Dict[str, Any]:

@@ -2,13 +2,13 @@ from datetime import datetime
 
 import numpy as np
 
-from config import PrecisionConfig
-from hardware_simulation import (
+from neural_network_from_scratch.config import PrecisionConfig
+from neural_network_from_scratch.hardware_simulation import (
     config_from_precision_config,
     run_training_with_hardware_constraints,
     save_hardware_log,
 )
-from student import NeuralNetwork
+from neural_network_from_scratch.student import NeuralNetwork
 
 
 def make_synthetic_data(n_samples=256, n_features=32, n_classes=4, seed=42):
