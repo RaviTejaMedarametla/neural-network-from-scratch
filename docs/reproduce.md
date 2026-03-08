@@ -10,12 +10,12 @@ python scripts/verify_environment.py
 
 ## 2) Optional dataset retrieval
 ```bash
-python scripts/download_fashion_mnist.py --out-dir "Neural Network from Scratch/task/Data"
+python scripts/download_fashion_mnist.py --out-dir "neural_network_from_scratch/Data"
 ```
 
 ## 3) Deterministic baseline training
 ```bash
-python "Neural Network from Scratch/task/train.py" --experiment baseline
+python "neural_network_from_scratch/train.py" --experiment baseline
 ```
 
 ## 3a) Record run manifest (recommended)
@@ -25,28 +25,28 @@ python scripts/write_run_manifest.py --experiment baseline --seed 42
 
 ## 4) Real dataset training (requires valid Fashion-MNIST CSV)
 ```bash
-python "Neural Network from Scratch/task/train.py" --experiment real_fashion_mnist
+python "neural_network_from_scratch/train.py" --experiment real_fashion_mnist
 ```
 
 ## 5) Benchmark and repeated statistical evaluation
 ```bash
-python "Neural Network from Scratch/task/benchmark.py"
-python "Neural Network from Scratch/task/statistical_analysis.py" --repeats 5
-python "Neural Network from Scratch/task/benchmark_report.py" --input benchmarks/benchmark_results.csv --output benchmarks/benchmark_summary.csv
+python "neural_network_from_scratch/benchmark.py"
+python "neural_network_from_scratch/statistical_analysis.py" --repeats 5
+python "neural_network_from_scratch/benchmark_report.py" --input benchmarks/benchmark_results.csv --output benchmarks/benchmark_summary.csv
 ```
 
 ## 6) Profiling, hardware scenarios, and scaling
 ```bash
-python "Neural Network from Scratch/task/profiler.py" --config "Neural Network from Scratch/task/config.py"
-python "Neural Network from Scratch/task/simulate_hardware.py"
-python "Neural Network from Scratch/task/hardware_stress_test.py"
-python "Neural Network from Scratch/task/scaling_study.py" --quick
+python "neural_network_from_scratch/profiler.py" --config "neural_network_from_scratch/config.py"
+python "neural_network_from_scratch/simulate_hardware.py"
+python "neural_network_from_scratch/hardware_stress_test.py"
+python "neural_network_from_scratch/scaling_study.py" --quick
 ```
 
 ## 7) Framework comparison and deployment checks
 ```bash
-python "Neural Network from Scratch/task/compare.py"
-python "Neural Network from Scratch/task/inference.py" --weights experiments/checkpoints/<ckpt>.npz --precision float32
+python "neural_network_from_scratch/compare.py"
+python "neural_network_from_scratch/inference.py" --weights experiments/checkpoints/<ckpt>.npz --precision float32
 ```
 
 ## 8) Artifacts to verify

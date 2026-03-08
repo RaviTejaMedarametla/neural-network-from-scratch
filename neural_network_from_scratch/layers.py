@@ -1,16 +1,11 @@
 import numpy as np
 
-
-def custom_uniform(n_in, n_out, rng=None, dtype=np.float32):
-    limit = np.sqrt(6.0 / (n_in + n_out))
-    sampler = np.random if rng is None else rng
-    weights = sampler.uniform(-limit, limit, (n_in, n_out))
-    return weights.astype(dtype)
+from neural_network_from_scratch.data_utils import initialize_weights
 
 
 class DenseLayer:
     def __init__(self, n_in, n_out, rng=None, dtype=np.float32):
-        self.weights = custom_uniform(n_in, n_out, rng=rng, dtype=dtype)
+        self.weights = initialize_weights(n_in, n_out, rng=rng, dtype=dtype)
         self.bias = np.zeros((1, n_out), dtype=dtype)
         self.input_cache = None
         self.z_cache = None

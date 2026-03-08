@@ -6,7 +6,8 @@ from typing import List
 
 import numpy as np
 
-from reproducibility import set_global_seed
+from neural_network_from_scratch.data_utils import one_hot
+from neural_network_from_scratch.reproducibility import set_global_seed
 
 try:
     import torch
@@ -69,17 +70,10 @@ class TorchNeuralNetwork:
         set_global_seed(self.seed)
         self.model = TorchMLP(self.layer_sizes, self.activations).to(self.device)
 
-    @staticmethod
-    def _one_hot(y, n_classes):
-        y = y.astype(np.int64).ravel()
-        out = np.zeros((y.shape[0], n_classes), dtype=np.float32)
-        out[np.arange(y.shape[0]), y] = 1.0
-        return out
-
     def fit(self, X, y, epochs=10, alpha=0.1, batch_size=32, shuffle=True, seed=42):
         set_global_seed(seed)
         X_np = X.astype(np.float32)
-        y_one_hot = self._one_hot(y, self.layer_sizes[-1])
+        y_one_hot = one_hot(y, self.layer_sizes[-1])
 
         X_tensor = torch.from_numpy(X_np).to(self.device)
         y_tensor = torch.from_numpy(y_one_hot).to(self.device)

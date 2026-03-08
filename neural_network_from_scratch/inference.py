@@ -8,10 +8,10 @@ from pathlib import Path
 
 import numpy as np
 
-from config import PrecisionConfig
-from deployment import export_onnx_from_pytorch, inference_report
-from reproducibility import set_global_seed
-from student import NeuralNetwork
+from neural_network_from_scratch.config import PrecisionConfig
+from neural_network_from_scratch.deployment import export_onnx_from_pytorch, inference_report
+from neural_network_from_scratch.reproducibility import set_global_seed
+from neural_network_from_scratch.student import NeuralNetwork
 
 
 def _load_npz_weights(model: NeuralNetwork, weights_path: str) -> None:

@@ -8,10 +8,10 @@ from pathlib import Path
 
 import numpy as np
 
-from config import PrecisionConfig
-from hardware_simulation import config_from_precision_config, run_training_with_hardware_constraints
-from reproducibility import set_global_seed
-from student import NeuralNetwork
+from neural_network_from_scratch.config import PrecisionConfig
+from neural_network_from_scratch.hardware_simulation import config_from_precision_config, run_training_with_hardware_constraints
+from neural_network_from_scratch.reproducibility import set_global_seed
+from neural_network_from_scratch.student import NeuralNetwork
 
 
 def run_stress(output_path: Path) -> None:

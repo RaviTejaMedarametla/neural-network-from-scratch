@@ -1,4 +1,4 @@
-from scaling_study import default_scaling_config, run_scaling_study
+from neural_network_from_scratch.scaling_study import default_scaling_config, run_scaling_study
 
 
 def main():

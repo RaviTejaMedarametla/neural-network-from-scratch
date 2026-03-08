@@ -3,11 +3,11 @@ import numpy as np
 import sys
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from config import PrecisionConfig
-from student import TwoLayerNeural
+from neural_network_from_scratch.config import PrecisionConfig
+from neural_network_from_scratch.student import TwoLayerNeural
 
 
 class VectorizedModelTests(unittest.TestCase):

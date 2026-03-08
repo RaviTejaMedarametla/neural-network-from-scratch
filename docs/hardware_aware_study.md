@@ -12,7 +12,7 @@ The current model and scripts are intended for controlled CPU-bound experiments:
 ## 1) Operator and layer profiling
 Run:
 ```bash
-python "Neural Network from Scratch/task/profiler.py" --config "Neural Network from Scratch/task/config.py"
+python "neural_network_from_scratch/profiler.py" --config "neural_network_from_scratch/config.py"
 ```
 Output:
 - `profiling/profile_neuralnetwork.json`
@@ -22,8 +22,8 @@ Use this artifact to inspect per-layer parameter count and activation-memory foo
 ## 2) Baseline benchmark sweep and statistical repeats
 Run:
 ```bash
-python "Neural Network from Scratch/task/benchmark.py" --seed 42
-python "Neural Network from Scratch/task/statistical_analysis.py" --repeats 5 --seed 42
+python "neural_network_from_scratch/benchmark.py" --seed 42
+python "neural_network_from_scratch/statistical_analysis.py" --repeats 5 --seed 42
 ```
 Inspect:
 - `benchmarks/benchmark_results.csv`
@@ -36,7 +36,7 @@ Inspect:
 ## 3) Hardware tables (latency, memory, bandwidth proxy)
 Run:
 ```bash
-python "Neural Network from Scratch/task/hardware_analysis_report.py" \
+python "neural_network_from_scratch/hardware_analysis_report.py" \
   --benchmark-csv benchmarks/benchmark_results.csv \
   --profile-json profiling/profile_neuralnetwork.json \
   --output-dir hardware_results
@@ -50,8 +50,8 @@ Inspect:
 ## 4) Constrained scenarios and bottleneck checks
 Run:
 ```bash
-python "Neural Network from Scratch/task/simulate_hardware.py"
-python "Neural Network from Scratch/task/hardware_stress_test.py"
+python "neural_network_from_scratch/simulate_hardware.py"
+python "neural_network_from_scratch/hardware_stress_test.py"
 ```
 Inspect:
 - `hardware_results/`

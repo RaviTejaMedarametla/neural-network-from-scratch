@@ -4,9 +4,9 @@ from pathlib import Path
 
 import numpy as np
 
-from experiment_manager import ExperimentManager
-from hardware_simulation import HardwareSimulationConfig, prepare_hardware_constrained_run
-from student import NeuralNetwork
+from neural_network_from_scratch.experiment_manager import ExperimentManager
+from neural_network_from_scratch.hardware_simulation import HardwareSimulationConfig, prepare_hardware_constrained_run
+from neural_network_from_scratch.student import NeuralNetwork
 
 
 class HardwareAndExperimentManagerTests(unittest.TestCase):

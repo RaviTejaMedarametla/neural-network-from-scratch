@@ -19,10 +19,4 @@ jobs:
       - name: Verify environment
         run: python scripts/verify_environment.py
       - name: Run tests
-        run: |
-          python -m unittest \
-            'Neural Network from Scratch/task/test/test_vectorized_model.py' \
-            'Neural Network from Scratch/task/test/test_benchmark.py' \
-            'Neural Network from Scratch/task/test/test_profiler_and_scaling.py' \
-            'Neural Network from Scratch/task/test/test_hardware_and_experiment_manager.py' \
-            'Neural Network from Scratch/task/test/test_deployment_onnx.py'
+        run: python -m unittest discover -s neural_network_from_scratch/test

@@ -13,8 +13,8 @@ from typing import Dict, List
 import matplotlib.pyplot as plt
 import numpy as np
 
-from benchmark import benchmark_one_setup
-from reproducibility import set_global_seed
+from neural_network_from_scratch.benchmark import benchmark_one_setup
+from neural_network_from_scratch.reproducibility import set_global_seed
 
 
 def _repo_root() -> Path:
