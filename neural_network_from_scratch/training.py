@@ -91,8 +91,11 @@ class NeuralNetwork(NeuralNetworkCore):
         return history
 
     def gradient_check(self, X, y, epsilon=1e-5, num_checks=10):
+        n_classes = self.layer_sizes[-1]
+        y_encoded = one_hot(y, n_classes) if y.ndim == 1 or y.shape[1] != n_classes else y.astype(np.float32)
+
         self.forward(X.astype(np.float32), training=False, precision="float32")
-        grads_w, grads_b = self._compute_gradients(y.astype(np.float32))
+        grads_w, grads_b = self._compute_gradients(y_encoded.astype(np.float32))
 
         analytical = {}
         params = {}
@@ -112,10 +115,10 @@ class NeuralNetwork(NeuralNetworkCore):
                 original = param[idx]
 
                 param[idx] = original + epsilon
-                plus_loss = self._loss(self.forward(X, training=False, precision="float32"), y)
+                plus_loss = self._loss(self.forward(X, training=False, precision="float32"), y_encoded)
 
                 param[idx] = original - epsilon
-                minus_loss = self._loss(self.forward(X, training=False, precision="float32"), y)
+                minus_loss = self._loss(self.forward(X, training=False, precision="float32"), y_encoded)
 
                 param[idx] = original
 

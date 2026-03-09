@@ -8,17 +8,22 @@ from pathlib import Path
 
 import numpy as np
 
+from neural_network_from_scratch.logging_utils import get_logger
 from neural_network_from_scratch.config import PrecisionConfig
 from neural_network_from_scratch.deployment import export_onnx_from_pytorch, inference_report
 from neural_network_from_scratch.reproducibility import set_global_seed
 from neural_network_from_scratch.student import NeuralNetwork
 
+logger = get_logger(__name__)
+
 
 def _load_npz_weights(model: NeuralNetwork, weights_path: str) -> None:
+    """Load serialized NumPy checkpoint weights into the model."""
     model.load_weights(weights_path)
 
 
 def main() -> None:
+    """CLI entrypoint for inference and optional ONNX export."""
     parser = argparse.ArgumentParser(description="Run inference-only evaluation")
     parser.add_argument("--weights", required=True, help="Path to .npz checkpoint")
     parser.add_argument("--precision", default="float32", choices=["float32", "float16", "int8"])
@@ -36,11 +41,12 @@ def main() -> None:
 
     X = np.random.default_rng(42).normal(size=(args.batch_size, layer_sizes[0])).astype(np.float32)
     report = inference_report(model, X, precision=args.precision)
-    print(json.dumps(report, indent=2))
+    logger.info("Inference report:
+%s", json.dumps(report, indent=2))
 
     if args.export_onnx:
         onnx_path = export_onnx_from_pytorch(layer_sizes, activations, "exports/model.onnx")
-        print(f"Exported ONNX model to {onnx_path}")
+        logger.info("Exported ONNX model to %s", onnx_path)
 
 
 if __name__ == "__main__":

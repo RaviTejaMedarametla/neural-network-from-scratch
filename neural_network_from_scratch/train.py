@@ -9,14 +9,18 @@ from typing import Any, Dict
 
 import numpy as np
 
+from neural_network_from_scratch.logging_utils import get_logger
 from neural_network_from_scratch.config import EXPERIMENT_CONFIGS, PrecisionConfig
 from neural_network_from_scratch.dataset_config import FASHION_MNIST_SPEC, ensure_dataset_ready, file_digest, load_dataset
 from neural_network_from_scratch.experiment_manager import ExperimentManager
 from neural_network_from_scratch.reproducibility import get_rng, set_global_seed
 from neural_network_from_scratch.student import NeuralNetwork
 
+logger = get_logger(__name__)
+
 
 def _resolve_experiment_config(config_name: str) -> Dict[str, Any]:
+    """Resolve experiment config by named preset or JSON file path."""
     if config_name in EXPERIMENT_CONFIGS:
         return dict(EXPERIMENT_CONFIGS[config_name])
 
@@ -28,6 +32,7 @@ def _resolve_experiment_config(config_name: str) -> Dict[str, Any]:
 
 
 def _load_training_data(cfg: Dict[str, Any]) -> tuple[np.ndarray, np.ndarray]:
+    """Load training data from synthetic generation or configured dataset."""
     synthetic_mode = bool(cfg.get("synthetic_mode", False))
 
     if synthetic_mode:
@@ -37,7 +42,7 @@ def _load_training_data(cfg: Dict[str, Any]) -> tuple[np.ndarray, np.ndarray]:
         n_classes = int(cfg["layer_sizes"][-1])
         X = rng.normal(size=(n_samples, n_features)).astype(np.float32)
         y = rng.integers(0, n_classes, size=n_samples, dtype=np.int32)
-        print(f"[dataset] synthetic_mode=True, generated {n_samples} samples")
+        logger.info("[dataset] synthetic_mode=True, generated %s samples", n_samples)
         return X, y
 
     ensure_dataset_ready(
@@ -48,11 +53,12 @@ def _load_training_data(cfg: Dict[str, Any]) -> tuple[np.ndarray, np.ndarray]:
         expected_sha256=cfg.get("dataset_sha256"),
     )
     dataset_path = cfg.get("dataset_path", FASHION_MNIST_SPEC.train_path)
-    print(f"[dataset] loading {dataset_path}")
+    logger.info("[dataset] loading %s", dataset_path)
     return load_dataset(dataset_path)
 
 
 def _train_val_split(X: np.ndarray, y: np.ndarray, val_ratio: float = 0.1, seed: int = 42):
+    """Split features and labels into train and validation partitions."""
     rng = get_rng(seed)
     idx = np.arange(X.shape[0])
     rng.shuffle(idx)
@@ -65,6 +71,7 @@ def _train_val_split(X: np.ndarray, y: np.ndarray, val_ratio: float = 0.1, seed:
 
 
 def run_experiment(config_name: str):
+    """Execute full training workflow and persist experiment artifacts."""
     cfg = _resolve_experiment_config(config_name)
     seed = int(cfg.get("seed", 42))
     set_global_seed(seed)
@@ -129,9 +136,9 @@ def run_experiment(config_name: str):
     model.save_weights(str(checkpoint_path))
     manager.add_checkpoint(str(checkpoint_path))
 
-    print(f"Experiment logged: {record.experiment_id} v{record.version}")
-    print(f"History file: experiments/logs/{record.experiment_id}.json")
-    print(f"Checkpoint: {checkpoint_path}")
+    logger.info("Experiment logged: %s v%s", record.experiment_id, record.version)
+    logger.info("History file: experiments/logs/%s.json", record.experiment_id)
+    logger.info("Checkpoint: %s", checkpoint_path)
 
 
 if __name__ == "__main__":

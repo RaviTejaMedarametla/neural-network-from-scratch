@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import numpy as np
 
+from neural_network_from_scratch.logging_utils import get_logger
 from neural_network_from_scratch.config import PrecisionConfig
 from neural_network_from_scratch.hardware_simulation import (
     config_from_precision_config,
@@ -10,8 +11,11 @@ from neural_network_from_scratch.hardware_simulation import (
 )
 from neural_network_from_scratch.student import NeuralNetwork
 
+logger = get_logger(__name__)
+
 
 def make_synthetic_data(n_samples=256, n_features=32, n_classes=4, seed=42):
+    """Generate deterministic synthetic classification data."""
     rng = np.random.default_rng(seed)
     X = rng.normal(size=(n_samples, n_features)).astype(np.float32)
     y = rng.integers(0, n_classes, size=n_samples, dtype=np.int32)
@@ -19,6 +23,7 @@ def make_synthetic_data(n_samples=256, n_features=32, n_classes=4, seed=42):
 
 
 def run_scenarios():
+    """Run predefined hardware-constrained training scenarios."""
     X, y = make_synthetic_data()
     layer_sizes = [32, 64, 4]
     activations = ["relu", "softmax"]
@@ -65,7 +70,7 @@ def run_scenarios():
         outcome["scenario"] = f"scenario_{idx}"
         results.append(outcome)
 
-        print(f"{outcome['scenario']}: {outcome}")
+        logger.info("%s: %s", outcome["scenario"], outcome)
 
     log_file = save_hardware_log(
         {
@@ -73,9 +78,9 @@ def run_scenarios():
             "results": results,
         },
         output_dir="hardware_results",
-        filename=f"simulation_{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}.json",
+        filename=f"simulation_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.json",
     )
-    print(f"Saved hardware simulation log to: {log_file}")
+    logger.info("Saved hardware simulation log to: %s", log_file)
 
 
 if __name__ == "__main__":
