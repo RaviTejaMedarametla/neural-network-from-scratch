@@ -15,7 +15,7 @@ def _git_sha(repo_root: Path) -> str:
     try:
         out = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_root, text=True)
         return out.strip()
-    except Exception:
+    except subprocess.CalledProcessError:
         return "unknown"
 
 

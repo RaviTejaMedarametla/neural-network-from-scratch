@@ -8,6 +8,10 @@ from typing import Optional
 
 import numpy as np
 
+from neural_network_from_scratch.logging_utils import get_logger
+
+logger = get_logger(__name__)
+
 
 def set_global_seed(seed: int, deterministic: bool = True) -> None:
     """Set random seeds for Python, NumPy and optionally PyTorch."""
@@ -27,9 +31,8 @@ def set_global_seed(seed: int, deterministic: bool = True) -> None:
             if hasattr(torch.backends, "cudnn"):
                 torch.backends.cudnn.deterministic = True
                 torch.backends.cudnn.benchmark = False
-    except Exception:
-        # PyTorch is optional in this repository.
-        pass
+    except ImportError:
+        logger.debug("PyTorch is not available; skipping torch seed setup")
 
 
 def get_rng(seed: Optional[int] = None) -> np.random.Generator:
