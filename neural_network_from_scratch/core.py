@@ -27,7 +27,9 @@ class NeuralNetworkCore(PrecisionMixin):
         self.layer_sizes = list(layer_sizes)
         self.activations = list(activations)
         self.l2_lambda = l2_lambda
-        self.dropout_rate = dropout_rate
+        if not 0.0 <= float(dropout_rate) < 1.0:
+            raise ValueError("dropout_rate must satisfy 0 <= dropout_rate < 1")
+        self.dropout_rate = float(dropout_rate)
 
         self.rng = np.random.default_rng(self.seed)
         self.layers = [
