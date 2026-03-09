@@ -1,8 +1,12 @@
 import json
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+from neural_network_from_scratch.logging_utils import get_logger
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -20,11 +24,12 @@ class ExperimentRecord:
 
 
 def _to_json_compatible(value):
+    """Convert nested values to JSON-serializable Python types."""
     if hasattr(value, "item"):
         try:
             return value.item()
-        except Exception:
-            pass
+        except (TypeError, ValueError):
+            logger.debug("Failed to convert scalar-like value %r via .item()", value)
     if isinstance(value, dict):
         return {k: _to_json_compatible(v) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
@@ -33,6 +38,8 @@ def _to_json_compatible(value):
 
 
 class ExperimentManager:
+    """Manage experiment metadata, metrics history, and checkpoints."""
+
     def __init__(self, log_dir: str = "experiments/logs"):
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(parents=True, exist_ok=True)
@@ -48,6 +55,7 @@ class ExperimentManager:
         return max(int(item.get("version", 0)) for item in history) + 1
 
     def read_history(self, experiment_id: str) -> List[Dict[str, Any]]:
+        """Load all persisted versions for an experiment identifier."""
         history_path = self._history_path(experiment_id)
         if not history_path.exists():
             return []
@@ -60,6 +68,7 @@ class ExperimentManager:
         metadata: Dict[str, Any],
         experiment_id: Optional[str] = None,
     ) -> ExperimentRecord:
+        """Create and persist a new experiment record version."""
         exp_id = experiment_id or config_name.replace("/", "_").replace(".", "_")
         version = self._next_version(exp_id)
 
@@ -70,28 +79,32 @@ class ExperimentManager:
         record = ExperimentRecord(
             experiment_id=exp_id,
             version=version,
-            created_at=datetime.utcnow().isoformat() + "Z",
+            created_at=datetime.now(timezone.utc).isoformat(),
             config_name=config_name,
             hyperparameters=hyperparameters,
             metadata=metadata,
         )
         self.active_record = record
         self._persist_record(record)
+        logger.info("Started experiment %s v%s", record.experiment_id, record.version)
         return record
 
     def log_metrics(self, metrics: Dict[str, List[float]]) -> None:
+        """Persist metric history for the active experiment."""
         if self.active_record is None:
             raise RuntimeError("No active experiment. Call start_experiment first.")
         self.active_record.metrics = _to_json_compatible(metrics)
         self._persist_record(self.active_record)
 
     def add_checkpoint(self, checkpoint_path: str) -> None:
+        """Attach a checkpoint artifact to the active experiment."""
         if self.active_record is None:
             raise RuntimeError("No active experiment. Call start_experiment first.")
         self.active_record.checkpoints.append(checkpoint_path)
         self._persist_record(self.active_record)
 
     def _persist_record(self, record: ExperimentRecord) -> None:
+        """Write the latest record state to disk while preserving versions."""
         history = self.read_history(record.experiment_id)
         history = [entry for entry in history if int(entry.get("version", -1)) != record.version]
         history.append(asdict(record))

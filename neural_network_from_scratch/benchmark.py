@@ -8,10 +8,13 @@ from pathlib import Path
 import numpy as np
 import psutil
 
+from neural_network_from_scratch.logging_utils import get_logger
 from neural_network_from_scratch.config import PrecisionConfig
 from neural_network_from_scratch.student import NeuralNetwork
 from neural_network_from_scratch.reproducibility import set_global_seed
 from neural_network_from_scratch.energy_estimation import estimate_runtime_energy_j
+
+logger = get_logger(__name__)
 
 
 def _repo_root():
@@ -29,6 +32,7 @@ def _maybe_profile_model(model, precision_config, batch_size):
 
 
 def make_synthetic_data(n_samples, n_features, n_classes, seed=42):
+    """Generate synthetic data for benchmark runs."""
     set_global_seed(seed)
     rng = np.random.default_rng(seed)
     X = rng.normal(size=(n_samples, n_features)).astype(np.float32)
@@ -97,6 +101,7 @@ def measure_batch_throughput(model, X, precision="float32", runs=5):
 
 
 def benchmark_one_setup(layer_sizes, activations, precision_mode, batch_size, n_samples=512, epochs=2, seed=42, enable_profiling=False):
+    """Benchmark one model, precision and batch-size configuration."""
     set_global_seed(seed)
     n_features = layer_sizes[0]
     n_classes = layer_sizes[-1]
@@ -196,4 +201,4 @@ if __name__ == "__main__":
         seed=args.seed,
         output_csv=args.output_csv,
     )
-    print(f"Saved {len(rows)} benchmark rows to {path}")
+    logger.info("Saved %s benchmark rows to %s", len(rows), path)

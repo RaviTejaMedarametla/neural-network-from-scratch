@@ -1,11 +1,15 @@
 import argparse
 import importlib.util
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
 
 import numpy as np
+
+from neural_network_from_scratch.logging_utils import get_logger
+
+logger = get_logger(__name__)
 
 
 BYTES_PER_DTYPE = {
@@ -110,6 +114,7 @@ def _activation_memory_bytes(model, input_shape):
 
 
 def profile_model(model, batch_size=1, output_dir="profiling"):
+    """Generate and persist a structural profile for a model instance."""
     if not hasattr(model, "layer_sizes"):
         raise ValueError("Model must expose layer_sizes for dynamic profiling.")
 
@@ -125,7 +130,7 @@ def profile_model(model, batch_size=1, output_dir="profiling"):
     act_bytes, act_details = _activation_memory_bytes(model, input_shape)
 
     report = {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "model": model.__class__.__name__,
         "layer_sizes": list(getattr(model, "layer_sizes", [])),
         "batch_size": int(batch_size),
@@ -183,6 +188,7 @@ def summary_table(report: Dict[str, Any]) -> str:
 
 
 def run_from_config(config_path: str):
+    """Run model profiling from a Python config module path."""
     config_module = _load_config_module(config_path)
     model = _build_model_from_config(config_module)
 
@@ -190,8 +196,8 @@ def run_from_config(config_path: str):
     output_dir = getattr(config_module, "PROFILE_OUTPUT_DIR", "profiling")
 
     report, output_file = profile_model(model=model, batch_size=batch_size, output_dir=output_dir)
-    print(summary_table(report))
-    print(f"\nSaved profiling report to: {output_file}")
+    logger.info("%s", summary_table(report))
+    logger.info("Saved profiling report to: %s", output_file)
     return report, output_file
 
 
