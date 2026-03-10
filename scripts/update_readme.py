@@ -30,13 +30,6 @@ WARNING_START = "<!-- METRICS_WARNING_START -->"
 WARNING_END = "<!-- METRICS_WARNING_END -->"
 
 
-def _format_timestamp(metrics: Dict[str, Any]) -> str:
-    source_ts = metrics.get("generated_at_utc")
-    if isinstance(source_ts, str) and source_ts.strip():
-        return source_ts
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-
-
 def render_metrics_block(metrics: Dict[str, Any]) -> str:
     """Render markdown block inserted between metrics markers."""
     generated_at = _format_timestamp(metrics)
@@ -68,20 +61,18 @@ def _default_metrics_placeholder() -> str:
     )
 
 
-def render_warning(accuracy: Any, min_acceptable_accuracy: float, reason: Optional[str] = None) -> str:
+def render_warning(accuracy: Any, min_acceptable_accuracy: float) -> str:
     """Render warning shown above preserved metrics on bad runs."""
     if isinstance(accuracy, (int, float)):
         accuracy_text = f"{float(accuracy):.4f}"
     else:
         accuracy_text = "N/A"
 
-    reason_suffix = f" Reason: {reason}." if reason else ""
     return (
         f"{WARNING_START}\n"
         "⚠️ Warning: The latest automated benchmark produced unreliable results "
         f"(accuracy = {accuracy_text}%; minimum acceptable = {min_acceptable_accuracy:.2f}%). "
-        "The model may need debugging. The last known good numbers are shown below."
-        f"{reason_suffix}\n"
+        "The model may need debugging. The last known good numbers are shown below.\n"
         f"{WARNING_END}\n"
     )
 
@@ -100,7 +91,8 @@ def _upsert_metrics_section(readme: str, block: str) -> str:
     return readme.rstrip() + f"\n\n{replacement}\n"
 
 
-def _load_metrics(metrics_path: Path) -> tuple[Optional[Dict[str, Any]], Optional[str]]:
+def update_readme(readme_path: Path, metrics_path: Path, min_acceptable_accuracy: float) -> None:
+    """Inject (or create) the metrics section in README using markers."""
     if not metrics_path.exists():
         return None, f"Metrics file not found: {metrics_path}"
     try:
@@ -116,36 +108,23 @@ def update_readme(readme_path: Path, metrics_path: Path, min_acceptable_accuracy
     if min_acceptable_accuracy < 0.0 or min_acceptable_accuracy > 100.0:
         raise ValueError("--min-acceptable-accuracy must be between 0 and 100")
 
-    metrics, load_error = _load_metrics(metrics_path)
+    metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+    accuracy = metrics.get("test_accuracy_percent")
+    below_threshold = isinstance(accuracy, (int, float)) and float(accuracy) < min_acceptable_accuracy
+    flagged_bad = bool(metrics.get("bad_metrics", False))
+    bad_metrics = flagged_bad or below_threshold
 
     readme = readme_path.read_text(encoding="utf-8")
     readme = _remove_existing_warning(readme)
 
-    bad_metrics = False
-    accuracy: Any = None
-    reason: Optional[str] = None
-
-    if metrics is None:
-        bad_metrics = True
-        reason = load_error
-    else:
-        accuracy = metrics.get("test_accuracy_percent")
-        below_threshold = isinstance(accuracy, (int, float)) and float(accuracy) < min_acceptable_accuracy
-        flagged_bad = bool(metrics.get("bad_metrics", False))
-        bad_metrics = flagged_bad or below_threshold
-        if flagged_bad:
-            reason = "metrics.json marked this run as bad"
-        elif below_threshold:
-            reason = "accuracy below threshold"
-
     if bad_metrics:
         if METRICS_START not in readme or METRICS_END not in readme:
             readme = _upsert_metrics_section(readme, _default_metrics_placeholder())
-        warning = render_warning(accuracy, min_acceptable_accuracy, reason=reason)
+        warning = render_warning(accuracy, min_acceptable_accuracy)
         insert_at = readme.index(METRICS_START)
         updated = readme[:insert_at] + warning + readme[insert_at:]
     else:
-        rendered = render_metrics_block(metrics or {})
+        rendered = render_metrics_block(metrics)
         updated = _upsert_metrics_section(readme, rendered)
 
     readme_path.write_text(updated + ("\n" if not updated.endswith("\n") else ""), encoding="utf-8")

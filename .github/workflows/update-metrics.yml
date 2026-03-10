@@ -35,8 +35,6 @@ jobs:
         id: collect_metrics
         continue-on-error: true
         run: |
-          # Avoid accidentally reusing stale metrics from a prior run.
-          rm -f metrics.json
           python scripts/collect_metrics.py \
             --epochs 5 \
             --min-acceptable-accuracy 80.0 \

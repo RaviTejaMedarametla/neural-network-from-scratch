@@ -124,6 +124,9 @@ Potential extensions include:
 ## License
 This project is licensed under the terms specified in the [LICENSE](LICENSE) file.
 
+<!-- METRICS_WARNING_START -->
+⚠️ Warning: The latest automated benchmark produced unreliable results (accuracy = 8.7891%; minimum acceptable = 80.00%). The model may need debugging. The last known good numbers are shown below.
+<!-- METRICS_WARNING_END -->
 <!-- METRICS_START -->
 ## Performance Metrics
 
