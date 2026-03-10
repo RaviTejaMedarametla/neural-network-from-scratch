@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 """Update README performance metrics section from metrics.json.
 
-Replaces content between markers:
+Uses markers:
   <!-- METRICS_START -->
   <!-- METRICS_END -->
 If markers are absent, they are appended to README.
+
+When metrics are flagged as bad or below threshold, the existing metrics block is preserved
+and a warning banner is inserted above it.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -22,6 +26,8 @@ if str(REPO_ROOT) not in sys.path:
 
 METRICS_START = "<!-- METRICS_START -->"
 METRICS_END = "<!-- METRICS_END -->"
+WARNING_START = "<!-- METRICS_WARNING_START -->"
+WARNING_END = "<!-- METRICS_WARNING_END -->"
 
 
 def render_metrics_block(metrics: Dict[str, Any]) -> str:
@@ -45,26 +51,71 @@ def render_metrics_block(metrics: Dict[str, Any]) -> str:
     )
 
 
-def update_readme(readme_path: Path, metrics_path: Path) -> None:
+def _default_metrics_placeholder() -> str:
+    return (
+        "## Performance Metrics\n\n"
+        "Latest automated benchmark run:\n\n"
+        "_No known good metrics are available yet._\n"
+    )
+
+
+def render_warning(accuracy: Any, min_acceptable_accuracy: float) -> str:
+    """Render warning shown above preserved metrics on bad runs."""
+    if isinstance(accuracy, (int, float)):
+        accuracy_text = f"{float(accuracy):.4f}"
+    else:
+        accuracy_text = "N/A"
+
+    return (
+        f"{WARNING_START}\n"
+        "⚠️ Warning: The latest automated benchmark produced unreliable results "
+        f"(accuracy = {accuracy_text}%; minimum acceptable = {min_acceptable_accuracy:.2f}%). "
+        "The model may need debugging. The last known good numbers are shown below.\n"
+        f"{WARNING_END}\n"
+    )
+
+
+def _remove_existing_warning(readme: str) -> str:
+    pattern = rf"\n?{re.escape(WARNING_START)}.*?{re.escape(WARNING_END)}\n?"
+    return re.sub(pattern, "\n", readme, flags=re.DOTALL)
+
+
+def _upsert_metrics_section(readme: str, block: str) -> str:
+    replacement = f"{METRICS_START}\n{block}\n{METRICS_END}"
+    if METRICS_START in readme and METRICS_END in readme:
+        start_idx = readme.index(METRICS_START)
+        end_idx = readme.index(METRICS_END) + len(METRICS_END)
+        return readme[:start_idx] + replacement + readme[end_idx:]
+    return readme.rstrip() + f"\n\n{replacement}\n"
+
+
+def update_readme(readme_path: Path, metrics_path: Path, min_acceptable_accuracy: float) -> None:
     """Inject (or create) the metrics section in README using markers."""
     if not metrics_path.exists():
         raise FileNotFoundError(f"Metrics file not found: {metrics_path}")
     if not readme_path.exists():
         raise FileNotFoundError(f"README file not found: {readme_path}")
+    if min_acceptable_accuracy < 0.0 or min_acceptable_accuracy > 100.0:
+        raise ValueError("--min-acceptable-accuracy must be between 0 and 100")
 
     metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
-    rendered = render_metrics_block(metrics)
+    accuracy = metrics.get("test_accuracy_percent")
+    below_threshold = isinstance(accuracy, (int, float)) and float(accuracy) < min_acceptable_accuracy
+    flagged_bad = bool(metrics.get("bad_metrics", False))
+    bad_metrics = flagged_bad or below_threshold
 
     readme = readme_path.read_text(encoding="utf-8")
+    readme = _remove_existing_warning(readme)
 
-    if METRICS_START in readme and METRICS_END in readme:
-        start_idx = readme.index(METRICS_START)
-        end_idx = readme.index(METRICS_END) + len(METRICS_END)
-        replacement = f"{METRICS_START}\n{rendered}\n{METRICS_END}"
-        updated = readme[:start_idx] + replacement + readme[end_idx:]
+    if bad_metrics:
+        if METRICS_START not in readme or METRICS_END not in readme:
+            readme = _upsert_metrics_section(readme, _default_metrics_placeholder())
+        warning = render_warning(accuracy, min_acceptable_accuracy)
+        insert_at = readme.index(METRICS_START)
+        updated = readme[:insert_at] + warning + readme[insert_at:]
     else:
-        block = f"\n\n{METRICS_START}\n{rendered}\n{METRICS_END}\n"
-        updated = readme.rstrip() + block
+        rendered = render_metrics_block(metrics)
+        updated = _upsert_metrics_section(readme, rendered)
 
     readme_path.write_text(updated + ("\n" if not updated.endswith("\n") else ""), encoding="utf-8")
 
@@ -73,9 +124,19 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Update README metrics section from JSON.")
     parser.add_argument("--metrics", type=Path, default=Path("metrics.json"), help="Path to metrics.json")
     parser.add_argument("--readme", type=Path, default=Path("README.md"), help="Path to README.md")
+    parser.add_argument(
+        "--min-acceptable-accuracy",
+        type=float,
+        default=80.0,
+        help="Minimum acceptable test accuracy. If accuracy is lower, preserve old metrics and add warning.",
+    )
     args = parser.parse_args()
 
-    update_readme(readme_path=args.readme, metrics_path=args.metrics)
+    update_readme(
+        readme_path=args.readme,
+        metrics_path=args.metrics,
+        min_acceptable_accuracy=args.min_acceptable_accuracy,
+    )
     print(f"Updated {args.readme} using {args.metrics}")
     return 0
 
