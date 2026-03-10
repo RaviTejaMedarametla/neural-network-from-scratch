@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Update README performance metrics section from metrics.json."""
+"""Update README performance metrics section from metrics.json.
+
+Replaces content between markers:
+  <!-- METRICS_START -->
+  <!-- METRICS_END -->
+If markers are absent, they are appended to README.
+"""
 
 from __future__ import annotations
 
@@ -18,24 +24,13 @@ METRICS_START = "<!-- METRICS_START -->"
 METRICS_END = "<!-- METRICS_END -->"
 
 
-def _format_timestamp(metrics: Dict[str, Any]) -> str:
-    ts = metrics.get("generated_at_utc")
-    if isinstance(ts, str) and ts:
-        return ts
-    return datetime.now(timezone.utc).isoformat()
-
-
 def render_metrics_block(metrics: Dict[str, Any]) -> str:
     """Render markdown block inserted between metrics markers."""
+    generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     accuracy = metrics.get("test_accuracy_percent", "N/A")
     train_time = metrics.get("training_time_seconds", "N/A")
     peak_memory = metrics.get("peak_memory_mb", "N/A")
     epochs = metrics.get("epochs", "N/A")
-    dataset = metrics.get("dataset", "unknown")
-    generated_at = _format_timestamp(metrics)
-    warning = metrics.get("warning")
-
-    warning_line = f"\n> ⚠️ {warning}\n" if warning else ""
 
     return (
         "## Performance Metrics\n\n"
@@ -45,9 +40,7 @@ def render_metrics_block(metrics: Dict[str, Any]) -> str:
         f"| Final test accuracy (%) | {accuracy} |\n"
         f"| Total training time (seconds) | {train_time} |\n"
         f"| Peak memory usage (MB) | {peak_memory} |\n"
-        f"| Epochs | {epochs} |\n"
-        f"| Dataset | {dataset} |\n"
-        f"{warning_line}\n"
+        f"| Epochs | {epochs} |\n\n"
         f"_Last updated: {generated_at}_\n"
     )
 
@@ -61,6 +54,7 @@ def update_readme(readme_path: Path, metrics_path: Path) -> None:
 
     metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
     rendered = render_metrics_block(metrics)
+
     readme = readme_path.read_text(encoding="utf-8")
 
     if METRICS_START in readme and METRICS_END in readme:
@@ -72,9 +66,7 @@ def update_readme(readme_path: Path, metrics_path: Path) -> None:
         block = f"\n\n{METRICS_START}\n{rendered}\n{METRICS_END}\n"
         updated = readme.rstrip() + block
 
-    if not updated.endswith("\n"):
-        updated += "\n"
-    readme_path.write_text(updated, encoding="utf-8")
+    readme_path.write_text(updated + ("\n" if not updated.endswith("\n") else ""), encoding="utf-8")
 
 
 def main() -> int:

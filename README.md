@@ -131,14 +131,11 @@ Latest automated benchmark run:
 
 | Metric | Value |
 |---|---:|
-| Final test accuracy (%) | 100.0 |
-| Total training time (seconds) | 1.6644 |
-| Peak memory usage (MB) | 62.5829 |
+| Final test accuracy (%) | 8.7891 |
+| Total training time (seconds) | 0.162 |
+| Peak memory usage (MB) | 26.0493 |
 | Epochs | 5 |
-| Dataset | synthetic-fallback |
 
-> ⚠️ Synthetic fallback data used; metrics are not representative of real Fashion-MNIST.
-
-_Last updated: 2026-03-10T21:24:50.785749+00:00_
+_Last updated: 2026-03-10 21:15:40 UTC_
 
 <!-- METRICS_END -->

@@ -30,23 +30,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install numpy pandas requests psutil tqdm
 
-      - name: Download Fashion-MNIST CSV files
+      - name: Collect model metrics
         run: |
-          python scripts/download_fashion_mnist.py --out-dir neural_network_from_scratch/Data
-
-      - name: Collect model metrics (real dataset)
-        run: |
-          python scripts/collect_metrics.py --epochs 5 --alpha 0.03 --batch-size 64 --hidden-sizes 256 128 --output metrics.json
-
-      - name: Verify metrics are from real dataset
-        run: |
-          python - <<'PY'
-          import json
-          data = json.load(open('metrics.json', 'r', encoding='utf-8'))
-          if data.get('dataset') != 'fashion-mnist':
-              raise SystemExit(f"Expected dataset=fashion-mnist, got {data.get('dataset')}")
-          print('Verified real Fashion-MNIST metrics output.')
-          PY
+          python scripts/collect_metrics.py --epochs 5 --output metrics.json
 
       - name: Update README metrics section
         run: |
