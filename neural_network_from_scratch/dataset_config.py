@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, Iterable, Optional, Tuple
 
 import numpy as np
 import requests
@@ -108,8 +108,23 @@ def load_dataset(path: str | Path) -> Tuple[np.ndarray, np.ndarray]:
 def _download_file(url: str, target: Path) -> None:
     response = requests.get(url, timeout=120)
     response.raise_for_status()
+    if not response.content:
+        raise ValueError(f"Downloaded file is empty from {url}")
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(response.content)
+
+
+def _download_with_fallbacks(filename: str, target: Path, base_urls: Iterable[str]) -> None:
+    errors = []
+    for base in base_urls:
+        url = f"{base.rstrip('/')}/{filename}"
+        try:
+            _download_file(url, target)
+            return
+        except Exception as exc:
+            errors.append(f"{url}: {exc}")
+
+    raise RuntimeError("All dataset download sources failed. " + " | ".join(errors))
 
 
 def download_fashion_mnist(spec: DatasetSpec = FASHION_MNIST_SPEC) -> Dict[str, str]:
@@ -117,8 +132,15 @@ def download_fashion_mnist(spec: DatasetSpec = FASHION_MNIST_SPEC) -> Dict[str, 
 
     train_target = Path(spec.train_path)
     test_target = Path(spec.test_path)
-    _download_file(f"{spec.download_base_url.rstrip('/')}/fashion-mnist_train.csv", train_target)
-    _download_file(f"{spec.download_base_url.rstrip('/')}/fashion-mnist_test.csv", test_target)
+
+    # Primary source plus a GitHub mirror for resilience in CI/network environments.
+    base_urls = [
+        spec.download_base_url,
+        "https://raw.githubusercontent.com/zalandoresearch/fashion-mnist/master/data/fashion",
+    ]
+
+    _download_with_fallbacks("fashion-mnist_train.csv", train_target, base_urls)
+    _download_with_fallbacks("fashion-mnist_test.csv", test_target, base_urls)
 
     return {
         "train_sha256": file_digest(train_target),
