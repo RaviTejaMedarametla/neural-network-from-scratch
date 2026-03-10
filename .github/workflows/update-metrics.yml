@@ -30,11 +30,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install numpy pandas requests psutil tqdm
 
-      - name: Download Fashion-MNIST CSV files
-        run: |
-          python scripts/download_fashion_mnist.py --out-dir neural_network_from_scratch/Data
-
-      - name: Collect model metrics (real dataset)
+      - name: Collect model metrics
         run: |
           python scripts/collect_metrics.py --epochs 5 --output metrics.json
 
