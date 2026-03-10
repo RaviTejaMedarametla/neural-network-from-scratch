@@ -123,3 +123,22 @@ Potential extensions include:
 
 ## License
 This project is licensed under the terms specified in the [LICENSE](LICENSE) file.
+
+<!-- METRICS_START -->
+## Performance Metrics
+
+Latest automated benchmark run:
+
+| Metric | Value |
+|---|---:|
+| Final test accuracy (%) | 100.0 |
+| Total training time (seconds) | 1.6644 |
+| Peak memory usage (MB) | 62.5829 |
+| Epochs | 5 |
+| Dataset | synthetic-fallback |
+
+> ⚠️ Synthetic fallback data used; metrics are not representative of real Fashion-MNIST.
+
+_Last updated: 2026-03-10T21:24:50.785749+00:00_
+
+<!-- METRICS_END -->

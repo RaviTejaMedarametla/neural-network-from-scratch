@@ -1,0 +1,16 @@
+{
+  "epochs": 5,
+  "learning_rate": 0.03,
+  "batch_size": 64,
+  "hidden_sizes": [
+    256,
+    128
+  ],
+  "seed": 42,
+  "test_accuracy_percent": 100.0,
+  "training_time_seconds": 1.6644,
+  "peak_memory_mb": 62.5829,
+  "generated_at_utc": "2026-03-10T21:24:50.785749+00:00",
+  "dataset": "synthetic-fallback",
+  "warning": "Synthetic fallback data used; metrics are not representative of real Fashion-MNIST."
+}
