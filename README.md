@@ -113,7 +113,6 @@ Related repositories:
 - `edge-ai-hardware-optimization`
 - `data-analysis-for-hospitals`
 - `nba-data-preprocessing`
-- `Data-Science-AI-Portfolio`
 
 ## Future Work
 Potential extensions include:
