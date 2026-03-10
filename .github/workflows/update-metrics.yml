@@ -101,39 +101,25 @@ jobs:
         if: ${{ always() }}
         run: |
           TRACKED_FILES=(README.md metrics.json artifacts/metrics_report.md artifacts/last_good_metrics.json)
-          CANDIDATE_FILES=()
+          EXISTING_FILES=()
           for file in "${TRACKED_FILES[@]}"; do
             if [ -e "$file" ]; then
-              CANDIDATE_FILES+=("$file")
+              EXISTING_FILES+=("$file")
             fi
           done
 
-          if [ ${#CANDIDATE_FILES[@]} -eq 0 ]; then
+          if [ ${#EXISTING_FILES[@]} -eq 0 ]; then
             echo "No metrics artifacts exist to commit."
             exit 0
           fi
 
-          COMMIT_FILES=()
-          for file in "${CANDIDATE_FILES[@]}"; do
-            if git check-ignore -q "$file"; then
-              echo "Skipping ignored file: $file"
-              continue
-            fi
-            COMMIT_FILES+=("$file")
-          done
-
-          if [ ${#COMMIT_FILES[@]} -eq 0 ]; then
-            echo "No non-ignored metrics artifacts to commit."
-            exit 0
-          fi
-
-          if git diff --quiet -- "${COMMIT_FILES[@]}"; then
+          if git diff --quiet -- "${EXISTING_FILES[@]}"; then
             echo "No metrics changes to commit."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "${COMMIT_FILES[@]}"
+          git add "${EXISTING_FILES[@]}"
           git commit -m "docs: update performance metrics [skip ci]"
           git push
