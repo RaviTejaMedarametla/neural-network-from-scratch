@@ -123,22 +123,3 @@ Potential extensions include:
 
 ## License
 This project is licensed under the terms specified in the [LICENSE](LICENSE) file.
-
-<!-- METRICS_WARNING_START -->
-⚠️ Warning: The latest automated benchmark produced unreliable results (accuracy = 8.7891%; minimum acceptable = 80.00%). The model may need debugging. The last known good numbers are shown below.
-<!-- METRICS_WARNING_END -->
-<!-- METRICS_START -->
-## Performance Metrics
-
-Latest automated benchmark run:
-
-| Metric | Value |
-|---|---:|
-| Final test accuracy (%) | 8.7891 |
-| Total training time (seconds) | 0.1572 |
-| Peak memory usage (MB) | 26.0482 |
-| Epochs | 5 |
-
-_Last updated: 2026-03-10 21:32:07 UTC_
-
-<!-- METRICS_END -->
