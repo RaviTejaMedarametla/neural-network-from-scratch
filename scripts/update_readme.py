@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
 """Update README performance metrics section from metrics.json.
 
-Uses markers:
-  <!-- METRICS_START -->
-  <!-- METRICS_END -->
-If markers are absent, they are appended to README.
-
-When metrics are flagged as bad or below threshold, the existing metrics block is preserved
-and a warning banner is inserted above it.
+Publishes only quality-gated metrics. On unreliable runs, shows a warning and retains
+last known good metrics from a dedicated backup payload when available.
 """
 
 from __future__ import annotations
@@ -30,8 +25,21 @@ WARNING_START = "<!-- METRICS_WARNING_START -->"
 WARNING_END = "<!-- METRICS_WARNING_END -->"
 
 
+def _num(value: Any) -> Optional[float]:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _format_timestamp(metrics: Dict[str, Any]) -> str:
+    source_ts = metrics.get("generated_at_utc")
+    if isinstance(source_ts, str) and source_ts.strip():
+        return source_ts
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+
 def render_metrics_block(metrics: Dict[str, Any]) -> str:
-    """Render markdown block inserted between metrics markers."""
     generated_at = _format_timestamp(metrics)
     accuracy = metrics.get("test_accuracy_percent", "N/A")
     train_time = metrics.get("training_time_seconds", "N/A")
@@ -41,14 +49,14 @@ def render_metrics_block(metrics: Dict[str, Any]) -> str:
 
     return (
         "## Performance Metrics\n\n"
-        "Latest automated benchmark run:\n\n"
-        "| Metric | Value |\n"
-        "|---|---:|\n"
-        f"| Final test accuracy (%) | {accuracy} |\n"
-        f"| Total training time (seconds) | {train_time} |\n"
-        f"| Peak memory usage (MB) | {peak_memory} |\n"
-        f"| Epochs | {epochs} |\n"
-        f"| Dataset source | {dataset} |\n\n"
+        "Latest automated benchmark run (published only if quality gates pass):\n\n"
+        "| Metric | Value | Desired Range | Notes |\n"
+        "|---|---:|---:|---|\n"
+        f"| Final test accuracy (%) | {accuracy} | 92–97 | Simple MLP can hit ~95% in 5 epochs |\n"
+        f"| Total training time (seconds) | {train_time} | 30–120 | Depends on CPU, batch size |\n"
+        f"| Peak memory usage (MB) | {peak_memory} | 100–500 | Depends on model size |\n"
+        f"| Epochs | {epochs} | 5 | Benchmark baseline |\n"
+        f"| Dataset source | {dataset} | MNIST/Fashion-MNIST | Must not be synthetic fallback |\n\n"
         f"_Last metrics payload timestamp: {generated_at}_\n"
     )
 
@@ -56,23 +64,20 @@ def render_metrics_block(metrics: Dict[str, Any]) -> str:
 def _default_metrics_placeholder() -> str:
     return (
         "## Performance Metrics\n\n"
-        "Latest automated benchmark run:\n\n"
+        "Latest automated benchmark run (published only if quality gates pass):\n\n"
         "_No known good metrics are available yet._\n"
     )
 
 
-def render_warning(accuracy: Any, min_acceptable_accuracy: float) -> str:
-    """Render warning shown above preserved metrics on bad runs."""
-    if isinstance(accuracy, (int, float)):
-        accuracy_text = f"{float(accuracy):.4f}"
-    else:
-        accuracy_text = "N/A"
-
+def render_warning(reason: str, accuracy: Any, min_acceptable_accuracy: float) -> str:
+    accuracy_value = _num(accuracy)
+    accuracy_text = f"{accuracy_value:.4f}" if accuracy_value is not None else "N/A"
     return (
         f"{WARNING_START}\n"
         "⚠️ Warning: The latest automated benchmark produced unreliable results "
         f"(accuracy = {accuracy_text}%; minimum acceptable = {min_acceptable_accuracy:.2f}%). "
-        "The model may need debugging. The last known good numbers are shown below.\n"
+        "The model may need debugging. The last known good numbers are shown below. "
+        f"Reason: {reason}.\n"
         f"{WARNING_END}\n"
     )
 
@@ -91,61 +96,128 @@ def _upsert_metrics_section(readme: str, block: str) -> str:
     return readme.rstrip() + f"\n\n{replacement}\n"
 
 
-def update_readme(readme_path: Path, metrics_path: Path, min_acceptable_accuracy: float) -> None:
-    """Inject (or create) the metrics section in README using markers."""
-    if not metrics_path.exists():
-        return None, f"Metrics file not found: {metrics_path}"
+def _load_json(path: Path) -> tuple[Optional[Dict[str, Any]], Optional[str]]:
+    if not path.exists():
+        return None, f"file not found: {path}"
     try:
-        return json.loads(metrics_path.read_text(encoding="utf-8")), None
-    except Exception as exc:  # malformed json etc.
-        return None, f"Could not parse metrics file: {exc}"
+        loaded = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return None, f"could not parse {path}: {exc}"
+    if not isinstance(loaded, dict):
+        return None, f"{path} must contain a JSON object"
+    return loaded, None
 
 
-def update_readme(readme_path: Path, metrics_path: Path, min_acceptable_accuracy: float) -> None:
-    """Inject (or create) the metrics section in README using markers."""
+def _quality_gate(
+    metrics: Dict[str, Any],
+    min_acceptable_accuracy: float,
+    publish_min_accuracy: float,
+    publish_min_time: float,
+    publish_max_time: float,
+    publish_min_memory: float,
+    publish_max_memory: float,
+) -> tuple[bool, str]:
+    if metrics.get("bad_metrics") is True:
+        return False, "metrics.json explicitly flagged bad_metrics=true"
+
+    dataset = str(metrics.get("dataset", "")).strip().lower()
+    if not dataset or "synthetic" in dataset:
+        return False, "dataset source is synthetic/unknown"
+
+    accuracy = _num(metrics.get("test_accuracy_percent"))
+    train_time = _num(metrics.get("training_time_seconds"))
+    peak_memory = _num(metrics.get("peak_memory_mb"))
+
+    if accuracy is None:
+        return False, "accuracy missing or non-numeric"
+    if train_time is None:
+        return False, "training time missing or non-numeric"
+    if peak_memory is None:
+        return False, "peak memory missing or non-numeric"
+
+    if accuracy < min_acceptable_accuracy:
+        return False, "accuracy below minimum acceptable threshold"
+    if accuracy < publish_min_accuracy:
+        return False, f"accuracy {accuracy:.4f}% below publish threshold {publish_min_accuracy:.2f}%"
+    if not (publish_min_time <= train_time <= publish_max_time):
+        return False, f"training time {train_time:.4f}s outside publish range [{publish_min_time:.2f}, {publish_max_time:.2f}]s"
+    if not (publish_min_memory <= peak_memory <= publish_max_memory):
+        return False, f"peak memory {peak_memory:.4f}MB outside publish range [{publish_min_memory:.2f}, {publish_max_memory:.2f}]MB"
+
+    return True, "passed"
+
+
+def update_readme(
+    readme_path: Path,
+    metrics_path: Path,
+    last_good_metrics_path: Path,
+    min_acceptable_accuracy: float,
+    publish_min_accuracy: float,
+    publish_min_time: float,
+    publish_max_time: float,
+    publish_min_memory: float,
+    publish_max_memory: float,
+) -> None:
     if not readme_path.exists():
         raise FileNotFoundError(f"README file not found: {readme_path}")
-    if min_acceptable_accuracy < 0.0 or min_acceptable_accuracy > 100.0:
-        raise ValueError("--min-acceptable-accuracy must be between 0 and 100")
 
-    metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
-    accuracy = metrics.get("test_accuracy_percent")
-    below_threshold = isinstance(accuracy, (int, float)) and float(accuracy) < min_acceptable_accuracy
-    flagged_bad = bool(metrics.get("bad_metrics", False))
-    bad_metrics = flagged_bad or below_threshold
+    current_metrics, load_error = _load_json(metrics_path)
+    readme = _remove_existing_warning(readme_path.read_text(encoding="utf-8"))
 
-    readme = readme_path.read_text(encoding="utf-8")
-    readme = _remove_existing_warning(readme)
+    publishable = False
+    reason = load_error or "metrics.json unavailable"
+    accuracy: Any = None
 
-    if bad_metrics:
-        if METRICS_START not in readme or METRICS_END not in readme:
-            readme = _upsert_metrics_section(readme, _default_metrics_placeholder())
-        warning = render_warning(accuracy, min_acceptable_accuracy)
+    if current_metrics is not None:
+        publishable, reason = _quality_gate(
+            current_metrics,
+            min_acceptable_accuracy,
+            publish_min_accuracy,
+            publish_min_time,
+            publish_max_time,
+            publish_min_memory,
+            publish_max_memory,
+        )
+        accuracy = current_metrics.get("test_accuracy_percent")
+
+    if publishable and current_metrics is not None:
+        last_good_metrics_path.parent.mkdir(parents=True, exist_ok=True)
+        last_good_metrics_path.write_text(json.dumps(current_metrics, indent=2) + "\n", encoding="utf-8")
+        updated = _upsert_metrics_section(readme, render_metrics_block(current_metrics))
+    else:
+        last_good_metrics, _ = _load_json(last_good_metrics_path)
+        preserved_block = render_metrics_block(last_good_metrics) if last_good_metrics else _default_metrics_placeholder()
+        readme = _upsert_metrics_section(readme, preserved_block)
+        warning = render_warning(reason=reason, accuracy=accuracy, min_acceptable_accuracy=min_acceptable_accuracy)
         insert_at = readme.index(METRICS_START)
         updated = readme[:insert_at] + warning + readme[insert_at:]
-    else:
-        rendered = render_metrics_block(metrics)
-        updated = _upsert_metrics_section(readme, rendered)
 
     readme_path.write_text(updated + ("\n" if not updated.endswith("\n") else ""), encoding="utf-8")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Update README metrics section from JSON.")
-    parser.add_argument("--metrics", type=Path, default=Path("metrics.json"), help="Path to metrics.json")
-    parser.add_argument("--readme", type=Path, default=Path("README.md"), help="Path to README.md")
-    parser.add_argument(
-        "--min-acceptable-accuracy",
-        type=float,
-        default=80.0,
-        help="Minimum acceptable test accuracy. If accuracy is lower, preserve old metrics and add warning.",
-    )
+    parser.add_argument("--metrics", type=Path, default=Path("metrics.json"))
+    parser.add_argument("--readme", type=Path, default=Path("README.md"))
+    parser.add_argument("--last-good-metrics", type=Path, default=Path("artifacts/last_good_metrics.json"))
+    parser.add_argument("--min-acceptable-accuracy", type=float, default=80.0)
+    parser.add_argument("--publish-min-accuracy", type=float, default=92.0)
+    parser.add_argument("--publish-min-time", type=float, default=30.0)
+    parser.add_argument("--publish-max-time", type=float, default=120.0)
+    parser.add_argument("--publish-min-memory", type=float, default=100.0)
+    parser.add_argument("--publish-max-memory", type=float, default=500.0)
     args = parser.parse_args()
 
     update_readme(
         readme_path=args.readme,
         metrics_path=args.metrics,
+        last_good_metrics_path=args.last_good_metrics,
         min_acceptable_accuracy=args.min_acceptable_accuracy,
+        publish_min_accuracy=args.publish_min_accuracy,
+        publish_min_time=args.publish_min_time,
+        publish_max_time=args.publish_max_time,
+        publish_min_memory=args.publish_min_memory,
+        publish_max_memory=args.publish_max_memory,
     )
     print(f"Updated {args.readme} using {args.metrics}")
     return 0

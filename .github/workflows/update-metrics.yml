@@ -35,9 +35,12 @@ jobs:
         id: collect_metrics
         continue-on-error: true
         run: |
+          # Avoid accidentally reusing stale metrics from a prior run.
+          rm -f metrics.json
           python scripts/collect_metrics.py \
             --epochs 5 \
             --min-acceptable-accuracy 80.0 \
+            --no-synthetic-fallback \
             --output metrics.json
 
       - name: Update README metrics section
@@ -46,7 +49,22 @@ jobs:
           python scripts/update_readme.py \
             --metrics metrics.json \
             --readme README.md \
-            --min-acceptable-accuracy 80.0
+            --last-good-metrics artifacts/last_good_metrics.json \
+            --min-acceptable-accuracy 80.0 \
+            --publish-min-accuracy 92.0 \
+            --publish-min-time 30.0 \
+            --publish-max-time 120.0 \
+            --publish-min-memory 100.0 \
+            --publish-max-memory 500.0
+
+      - name: Generate run metrics report
+        if: ${{ always() }}
+        run: |
+          if [ -f metrics.json ]; then
+            python scripts/generate_metrics_report.py --metrics metrics.json --output artifacts/metrics_report.md
+          else
+            echo "metrics.json not found; skipping report generation"
+          fi
 
       - name: Optional sanity gate for low accuracy
         if: ${{ always() }}
@@ -72,12 +90,12 @@ jobs:
       - name: Commit and push changes
         if: ${{ always() }}
         run: |
-          if git diff --quiet -- README.md metrics.json; then
+          if git diff --quiet -- README.md metrics.json artifacts/metrics_report.md artifacts/last_good_metrics.json; then
             echo "No metrics changes to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md metrics.json
+          git add README.md metrics.json artifacts/metrics_report.md artifacts/last_good_metrics.json
           git commit -m "docs: update performance metrics [skip ci]"
           git push
