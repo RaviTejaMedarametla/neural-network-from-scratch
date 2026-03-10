@@ -1,106 +1,106 @@
+"""Reference NumPy MLP implementation.
+
+This module keeps a compact educational implementation that is independent from
+higher-level training abstractions used in the rest of the package.
+"""
+
+from __future__ import annotations
+
 import numpy as np
 
+
 class NeuralNetwork:
-    """Multi‑layer perceptron with ReLU hidden layers and softmax output."""
-    
+    """Multi-layer perceptron with ReLU hidden layers and softmax output."""
+
     def __init__(self, layer_sizes, learning_rate=0.01, seed=42):
-        """
-        layer_sizes: list of ints, e.g. [784, 128, 64, 10]
-        learning_rate: float
-        """
-        np.random.seed(seed)
-        self.learning_rate = learning_rate
+        if len(layer_sizes) < 2:
+            raise ValueError("layer_sizes must include input and output dimensions")
+
+        self.layer_sizes = list(layer_sizes)
+        self.learning_rate = float(learning_rate)
+        self.rng = np.random.default_rng(int(seed))
+
         self.weights = []
         self.biases = []
-        
-        for i in range(len(layer_sizes) - 1):
-            # He initialization for ReLU
-            w = np.random.randn(layer_sizes[i], layer_sizes[i+1]) * np.sqrt(2. / layer_sizes[i])
-            b = np.zeros((1, layer_sizes[i+1]))
-            self.weights.append(w)
-            self.biases.append(b)
-    
-    def _relu(self, x):
-        return np.maximum(0, x)
-    
-    def _relu_derivative(self, x):
-        return (x > 0).astype(float)
-    
-    def _softmax(self, x):
-        exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
+        for fan_in, fan_out in zip(self.layer_sizes[:-1], self.layer_sizes[1:]):
+            weight = self.rng.standard_normal((fan_in, fan_out)) * np.sqrt(2.0 / fan_in)
+            bias = np.zeros((1, fan_out), dtype=np.float64)
+            self.weights.append(weight)
+            self.biases.append(bias)
+
+        self.cache = {}
+
+    @staticmethod
+    def _relu(x):
+        return np.maximum(0.0, x)
+
+    @staticmethod
+    def _relu_derivative(x):
+        return (x > 0.0).astype(np.float64)
+
+    @staticmethod
+    def _softmax(x):
+        shifted = x - np.max(x, axis=1, keepdims=True)
+        exp_x = np.exp(shifted)
         return exp_x / np.sum(exp_x, axis=1, keepdims=True)
-    
+
     def forward(self, X):
-        """Forward pass, returns output probabilities and caches for backprop."""
-        self.cache = {}  # store intermediate values
-        a = X
-        self.cache['a0'] = a
-        
-        for i, (w, b) in enumerate(zip(self.weights, self.biases)):
-            z = a @ w + b
-            if i < len(self.weights) - 1:  # hidden layers: ReLU
-                a = self._relu(z)
-            else:                           # output layer: linear (softmax later)
-                a = z
-            self.cache[f'z{i+1}'] = z
-            self.cache[f'a{i+1}'] = a
-        
-        # Apply softmax to output layer for probabilities
-        probs = self._softmax(a)
-        return probs
-    
+        self.cache = {"a0": X}
+        activations = X
+
+        for idx, (weight, bias) in enumerate(zip(self.weights, self.biases), start=1):
+            z = activations @ weight + bias
+            if idx < len(self.weights):
+                activations = self._relu(z)
+            else:
+                activations = z
+            self.cache[f"z{idx}"] = z
+            self.cache[f"a{idx}"] = activations
+
+        return self._softmax(activations)
+
     def backward(self, X, y, probs):
-        """Backpropagation using cross‑entropy loss."""
-        m = X.shape[0]  # batch size
-        
-        # Gradient of loss w.r.t. output logits (softmax + cross‑entropy)
-        dlogits = probs.copy()
-        dlogits[range(m), y] -= 1
-        dlogits /= m
-        
-        grads_w = []
-        grads_b = []
-        
-        # Backprop through layers in reverse
-        for i in reversed(range(len(self.weights))):
-            a_prev = self.cache[f'a{i}']  # activation of previous layer
-            z = self.cache[f'z{i+1}']
-            
-            # Gradient for current layer weights and biases
-            dw = a_prev.T @ dlogits
-            db = np.sum(dlogits, axis=0, keepdims=True)
-            grads_w.insert(0, dw)
-            grads_b.insert(0, db)
-            
-            if i > 0:  # propagate gradient to previous layer
-                dlogits = dlogits @ self.weights[i].T
-                # ReLU derivative
-                dlogits *= self._relu_derivative(z)
-        
+        batch_size = X.shape[0]
+
+        delta = probs.copy()
+        delta[np.arange(batch_size), y] -= 1.0
+        delta /= batch_size
+
+        grads_w = [None] * len(self.weights)
+        grads_b = [None] * len(self.biases)
+
+        for layer_idx in reversed(range(len(self.weights))):
+            a_prev = self.cache[f"a{layer_idx}"]
+            grads_w[layer_idx] = a_prev.T @ delta
+            grads_b[layer_idx] = np.sum(delta, axis=0, keepdims=True)
+
+            if layer_idx > 0:
+                prev_z = self.cache[f"z{layer_idx}"]
+                delta = (delta @ self.weights[layer_idx].T) * self._relu_derivative(prev_z)
+
         return grads_w, grads_b
-    
+
     def update(self, grads_w, grads_b):
-        """Gradient descent update."""
         for i in range(len(self.weights)):
             self.weights[i] -= self.learning_rate * grads_w[i]
-            self.biases[i]   -= self.learning_rate * grads_b[i]
-    
+            self.biases[i] -= self.learning_rate * grads_b[i]
+
     def train_step(self, X_batch, y_batch):
-        """Single training step: forward, backward, update."""
         probs = self.forward(X_batch)
         grads_w, grads_b = self.backward(X_batch, y_batch, probs)
         self.update(grads_w, grads_b)
         return self._cross_entropy_loss(probs, y_batch)
-    
-    def _cross_entropy_loss(self, probs, y):
+
+    @staticmethod
+    def _cross_entropy_loss(probs, y):
         m = y.shape[0]
-        log_likelihood = -np.log(probs[range(m), y] + 1e-8)
-        return np.sum(log_likelihood) / m
-    
+        return float(np.mean(-np.log(probs[np.arange(m), y] + 1e-8)))
+
     def predict(self, X):
-        probs = self.forward(X)
-        return np.argmax(probs, axis=1)
-    
+        return np.argmax(self.forward(X), axis=1)
+
     def accuracy(self, X, y):
-        preds = self.predict(X)
-        return np.mean(preds == y)
+        return float(np.mean(self.predict(X) == y))
+
+
+NeuralNetworkModel = NeuralNetwork
