@@ -4,8 +4,8 @@
   "batch_size": 32,
   "seed": 42,
   "test_accuracy_percent": 8.7891,
-  "training_time_seconds": 0.162,
-  "peak_memory_mb": 26.0493,
-  "generated_at_utc": "2026-03-10T21:15:40.859297+00:00",
+  "training_time_seconds": 0.1572,
+  "peak_memory_mb": 26.0482,
+  "generated_at_utc": "2026-03-10T21:32:07.160195+00:00",
   "dataset": "synthetic-fallback"
 }
