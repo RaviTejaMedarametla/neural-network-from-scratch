@@ -18,7 +18,7 @@ import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
@@ -32,11 +32,12 @@ WARNING_END = "<!-- METRICS_WARNING_END -->"
 
 def render_metrics_block(metrics: Dict[str, Any]) -> str:
     """Render markdown block inserted between metrics markers."""
-    generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    generated_at = _format_timestamp(metrics)
     accuracy = metrics.get("test_accuracy_percent", "N/A")
     train_time = metrics.get("training_time_seconds", "N/A")
     peak_memory = metrics.get("peak_memory_mb", "N/A")
     epochs = metrics.get("epochs", "N/A")
+    dataset = metrics.get("dataset", "N/A")
 
     return (
         "## Performance Metrics\n\n"
@@ -46,8 +47,9 @@ def render_metrics_block(metrics: Dict[str, Any]) -> str:
         f"| Final test accuracy (%) | {accuracy} |\n"
         f"| Total training time (seconds) | {train_time} |\n"
         f"| Peak memory usage (MB) | {peak_memory} |\n"
-        f"| Epochs | {epochs} |\n\n"
-        f"_Last updated: {generated_at}_\n"
+        f"| Epochs | {epochs} |\n"
+        f"| Dataset source | {dataset} |\n\n"
+        f"_Last metrics payload timestamp: {generated_at}_\n"
     )
 
 
@@ -92,7 +94,15 @@ def _upsert_metrics_section(readme: str, block: str) -> str:
 def update_readme(readme_path: Path, metrics_path: Path, min_acceptable_accuracy: float) -> None:
     """Inject (or create) the metrics section in README using markers."""
     if not metrics_path.exists():
-        raise FileNotFoundError(f"Metrics file not found: {metrics_path}")
+        return None, f"Metrics file not found: {metrics_path}"
+    try:
+        return json.loads(metrics_path.read_text(encoding="utf-8")), None
+    except Exception as exc:  # malformed json etc.
+        return None, f"Could not parse metrics file: {exc}"
+
+
+def update_readme(readme_path: Path, metrics_path: Path, min_acceptable_accuracy: float) -> None:
+    """Inject (or create) the metrics section in README using markers."""
     if not readme_path.exists():
         raise FileNotFoundError(f"README file not found: {readme_path}")
     if min_acceptable_accuracy < 0.0 or min_acceptable_accuracy > 100.0:
