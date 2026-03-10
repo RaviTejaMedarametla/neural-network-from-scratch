@@ -132,10 +132,10 @@ Latest automated benchmark run:
 | Metric | Value |
 |---|---:|
 | Final test accuracy (%) | 8.7891 |
-| Total training time (seconds) | 0.5626 |
-| Peak memory usage (MB) | 26.0534 |
+| Total training time (seconds) | 0.1744 |
+| Peak memory usage (MB) | 26.0493 |
 | Epochs | 5 |
 
-_Last updated: 2026-03-10 20:55:49 UTC_
+_Last updated: 2026-03-10 21:00:24 UTC_
 
 <!-- METRICS_END -->
