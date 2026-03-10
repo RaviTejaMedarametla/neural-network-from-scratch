@@ -123,3 +123,19 @@ Potential extensions include:
 
 ## License
 This project is licensed under the terms specified in the [LICENSE](LICENSE) file.
+
+<!-- METRICS_START -->
+## Performance Metrics
+
+Latest automated benchmark run:
+
+| Metric | Value |
+|---|---:|
+| Final test accuracy (%) | 8.7891 |
+| Total training time (seconds) | 0.5626 |
+| Peak memory usage (MB) | 26.0534 |
+| Epochs | 5 |
+
+_Last updated: 2026-03-10 20:55:49 UTC_
+
+<!-- METRICS_END -->
