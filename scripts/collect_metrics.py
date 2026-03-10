@@ -87,16 +87,37 @@ def main() -> int:
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output", type=Path, default=Path("metrics.json"))
+    parser.add_argument(
+        "--min-acceptable-accuracy",
+        type=float,
+        default=80.0,
+        help="Minimum acceptable test accuracy percentage before failing the run.",
+    )
     parser.add_argument("--no-synthetic-fallback", action="store_true", help="Disable synthetic fallback data")
     args = parser.parse_args()
 
     if args.epochs <= 0 or args.batch_size <= 0:
         raise ValueError("--epochs and --batch-size must be > 0")
 
+    if args.min_acceptable_accuracy < 0.0 or args.min_acceptable_accuracy > 100.0:
+        raise ValueError("--min-acceptable-accuracy must be between 0 and 100")
+
     metrics = collect_metrics(args.epochs, args.alpha, args.batch_size, args.seed, not args.no_synthetic_fallback)
+    accuracy = float(metrics.get("test_accuracy_percent", 0.0))
+    is_bad_metrics = accuracy < float(args.min_acceptable_accuracy)
+    if is_bad_metrics:
+        metrics["bad_metrics"] = True
+        metrics["minimum_acceptable_accuracy_percent"] = float(args.min_acceptable_accuracy)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(metrics, indent=2))
+    if is_bad_metrics:
+        print(
+            "[collect_metrics] WARNING: accuracy "
+            f"{accuracy:.4f}% is below minimum acceptable threshold "
+            f"{args.min_acceptable_accuracy:.4f}%. Marking metrics as bad and failing the run."
+        )
+        return 1
     return 0
 
 
