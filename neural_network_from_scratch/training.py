@@ -79,11 +79,12 @@ class NeuralNetwork(NeuralNetworkCore):
                 else:
                     epochs_no_improve += 1
                     if patience is not None and epochs_no_improve >= patience:
-                        if restore_best and best_params is not None:
-                            for layer, best_w, best_b in zip(self.layers, best_params[0], best_params[1]):
-                                layer.weights = best_w
-                                layer.bias = best_b
                         break
+
+        if restore_best and best_params is not None:
+            for layer, best_w, best_b in zip(self.layers, best_params[0], best_params[1]):
+                layer.weights = best_w
+                layer.bias = best_b
 
         if save_path is not None:
             self.save_weights(save_path)

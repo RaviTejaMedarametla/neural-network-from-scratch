@@ -59,6 +59,33 @@ class VectorizedModelTests(unittest.TestCase):
 
         np.testing.assert_allclose(hist_a['loss'], hist_b['loss'], atol=1e-7)
 
+    def test_restore_best_applies_even_without_early_stop(self):
+        rng = np.random.default_rng(123)
+        x = rng.normal(size=(300, 2)).astype(np.float32)
+        y = (x[:, 0] + 0.2 * x[:, 1] > 0).astype(int)
+
+        x_train, y_train = x[:220], y[:220]
+        x_val, y_val = x[220:], y[220:]
+
+        model = TwoLayerNeural(2, 2, hidden_activation='relu', output_activation='softmax')
+        history = model.fit(
+            x_train,
+            y_train,
+            epochs=35,
+            alpha=0.8,
+            batch_size=16,
+            seed=17,
+            X_val=x_val,
+            y_val=y_val,
+            patience=None,
+            restore_best=True,
+        )
+
+        y_val_one_hot = np.eye(2, dtype=np.float32)[y_val]
+        final_val_loss = model._loss(model.forward(x_val, training=False, precision='float32'), y_val_one_hot)
+
+        self.assertAlmostEqual(final_val_loss, min(history['val_loss']), places=6)
+
 
 if __name__ == '__main__':
     unittest.main()
