@@ -6,6 +6,7 @@ import numpy as np
 
 from neural_network_from_scratch.core import NeuralNetworkCore
 from neural_network_from_scratch.data_utils import one_hot
+from neural_network_from_scratch.metrics import evaluate_model
 
 
 class NeuralNetwork(NeuralNetworkCore):
@@ -90,6 +91,10 @@ class NeuralNetwork(NeuralNetworkCore):
             self.save_weights(save_path)
 
         return history
+
+    def evaluate(self, X, y, precision=None, runs=10):
+        selected_precision = self.infer_precision if precision is None else precision
+        return evaluate_model(self, X=X, y_true=y, precision=selected_precision, runs=runs)
 
     def gradient_check(self, X, y, epsilon=1e-5, num_checks=10):
         n_classes = self.layer_sizes[-1]
