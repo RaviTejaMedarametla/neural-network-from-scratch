@@ -97,6 +97,47 @@ jobs:
           fi
 
           if git diff --quiet -- "${COMMIT_FILES[@]}"; then
+          metrics_path = Path("metrics.json")
+          if not metrics_path.exists():
+            print("metrics.json missing; skipping sanity gate")
+            raise SystemExit(0)
+
+          metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+
+          if bool(metrics.get("bad_metrics", False)):
+            print("metrics.json marked bad_metrics=true; skipping optional sanity gate")
+            raise SystemExit(0)
+
+          accuracy = float(metrics.get("test_accuracy_percent", -1.0))
+          threshold = 80.0
+          if accuracy < 0:
+            print("test_accuracy_percent missing/invalid; skipping optional sanity gate")
+            raise SystemExit(0)
+
+          if accuracy < threshold:
+            raise SystemExit(
+              f"Sanity gate failed: accuracy {accuracy:.4f}% is below threshold {threshold:.2f}%"
+            )
+          print(f"Sanity gate passed: accuracy {accuracy:.4f}% >= {threshold:.2f}%")
+          PY
+
+      - name: Commit and push changes
+        if: ${{ always() }}
+        run: |
+          TRACKED_FILES=(README.md metrics.json artifacts/metrics_report.md artifacts/last_good_metrics.json)
+          EXISTING_FILES=()
+          for file in "${TRACKED_FILES[@]}"; do
+            if [ -e "$file" ]; then
+              EXISTING_FILES+=("$file")
+            fi
+          done
+
+          if [ ${#EXISTING_FILES[@]} -eq 0 ]; then
+            echo "No metrics artifacts exist to commit."
+            exit 0
+          fi
+
+          if git diff --quiet -- "${EXISTING_FILES[@]}"; then
             echo "No metrics changes to commit."
             exit 0
           fi
@@ -104,5 +145,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "${COMMIT_FILES[@]}"
+          git add "${EXISTING_FILES[@]}"
           git commit -m "docs: update performance metrics [skip ci]"
           git push
