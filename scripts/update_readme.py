@@ -19,6 +19,14 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from neural_network_from_scratch.metrics_schema import (
+    KEY_ACCURACY,
+    KEY_BAD_METRICS,
+    KEY_PEAK_MEMORY_MB,
+    get_dataset_source,
+    get_training_time_seconds,
+)
+
 METRICS_START = "<!-- METRICS_START -->"
 METRICS_END = "<!-- METRICS_END -->"
 WARNING_START = "<!-- METRICS_WARNING_START -->"
@@ -41,11 +49,11 @@ def _format_timestamp(metrics: Dict[str, Any]) -> str:
 
 def render_metrics_block(metrics: Dict[str, Any]) -> str:
     generated_at = _format_timestamp(metrics)
-    accuracy = metrics.get("test_accuracy_percent", "N/A")
-    train_time = metrics.get("training_time_seconds", "N/A")
-    peak_memory = metrics.get("peak_memory_mb", "N/A")
+    accuracy = metrics.get(KEY_ACCURACY, "N/A")
+    train_time = get_training_time_seconds(metrics, "N/A")
+    peak_memory = metrics.get(KEY_PEAK_MEMORY_MB, "N/A")
     epochs = metrics.get("epochs", "N/A")
-    dataset = metrics.get("dataset", "N/A")
+    dataset = get_dataset_source(metrics, "N/A")
 
     return (
         "## Performance Metrics\n\n"
@@ -117,16 +125,16 @@ def _quality_gate(
     publish_min_memory: float,
     publish_max_memory: float,
 ) -> tuple[bool, str]:
-    if metrics.get("bad_metrics") is True:
+    if metrics.get(KEY_BAD_METRICS) is True:
         return False, "metrics.json explicitly flagged bad_metrics=true"
 
-    dataset = str(metrics.get("dataset", "")).strip().lower()
+    dataset = get_dataset_source(metrics, "").strip().lower()
     if not dataset or "synthetic" in dataset:
         return False, "dataset source is synthetic/unknown"
 
-    accuracy = _num(metrics.get("test_accuracy_percent"))
-    train_time = _num(metrics.get("training_time_seconds"))
-    peak_memory = _num(metrics.get("peak_memory_mb"))
+    accuracy = _num(metrics.get(KEY_ACCURACY))
+    train_time = _num(get_training_time_seconds(metrics))
+    peak_memory = _num(metrics.get(KEY_PEAK_MEMORY_MB))
 
     if accuracy is None:
         return False, "accuracy missing or non-numeric"
@@ -178,7 +186,7 @@ def update_readme(
             publish_min_memory,
             publish_max_memory,
         )
-        accuracy = current_metrics.get("test_accuracy_percent")
+        accuracy = current_metrics.get(KEY_ACCURACY)
 
     if publishable and current_metrics is not None:
         last_good_metrics_path.parent.mkdir(parents=True, exist_ok=True)

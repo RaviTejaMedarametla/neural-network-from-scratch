@@ -5,7 +5,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from neural_network_from_scratch.metrics_schema import KEY_ACCURACY, KEY_PEAK_MEMORY_MB, get_dataset_source, get_training_time_seconds
 
 
 def main() -> int:
@@ -19,10 +26,22 @@ def main() -> int:
 
     metrics = json.loads(args.metrics.read_text(encoding="utf-8"))
 
+    accuracy = metrics.get(KEY_ACCURACY, "N/A")
+    train_time = get_training_time_seconds(metrics, "N/A")
+    peak_memory = metrics.get(KEY_PEAK_MEMORY_MB, "N/A")
+    dataset = get_dataset_source(metrics, "N/A")
+
     lines = [
         "# Benchmark Report",
         "",
         "Source: automated run using `scripts/collect_metrics.py`.",
+        "",
+        "## Summary",
+        "",
+        f"- Dataset: {dataset}",
+        f"- Accuracy (%): {accuracy}",
+        f"- Training time (s): {train_time}",
+        f"- Peak memory (MB): {peak_memory}",
         "",
         "## Raw Metrics",
         "",
