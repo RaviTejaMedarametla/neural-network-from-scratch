@@ -1,13 +1,30 @@
+# NeuroSpec: Hardware-Aware Neural Network From Scratch
 
+NeuroSpec is a research-focused project implementing a neural network from scratch (NumPy only) and coupling it with a hardware estimator to evaluate AI accelerator characteristics.
 
-<!-- METRICS_WARNING_START -->
-⚠️ Warning: The latest automated benchmark produced unreliable results (accuracy = 0.0000%; minimum acceptable = 80.00%). The model may need debugging. The last known good numbers are shown below. Reason: metrics.json explicitly flagged bad_metrics=true.
-<!-- METRICS_WARNING_END -->
-<!-- METRICS_START -->
-## Performance Metrics
+## Key features
+- Fully manual forward/backward implementation for dense neural networks.
+- Synthetic hardware-aware dataset generation.
+- Hardware estimation of throughput, latency, energy, and roofline utilization.
+- Multi-objective research metrics combining model quality and hardware efficiency.
+- CLI for reproducible experiments.
 
-Latest automated benchmark run (published only if quality gates pass):
+## Quickstart
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .[dev]
+neurospec-train --epochs 10 --batch-size 128 --precision-bits 8 --output artifacts
+```
 
-_No known good metrics are available yet. Try re-running metrics collection with valid dataset and hardware-optimized settings._
+The command writes `artifacts/result.json`.
 
-<!-- METRICS_END -->
+## Research objective
+The benchmark objective combines:
+- validation accuracy,
+- validation loss,
+- hardware efficiency,
+- performance-per-watt,
+- normalized energy-delay product.
+
+This provides a compact proxy for hardware-model co-design quality.
