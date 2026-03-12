@@ -67,7 +67,7 @@ def _default_metrics_placeholder() -> str:
     return (
         "## Performance Metrics\n\n"
         "Latest automated benchmark run (published only if quality gates pass):\n\n"
-        "_No known good metrics are available yet._\n"
+        "_No known good metrics are available yet. Try re-running metrics collection with valid dataset and hardware-optimized settings._\n"
     )
 
 

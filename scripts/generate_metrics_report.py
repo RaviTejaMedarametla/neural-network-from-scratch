@@ -44,6 +44,8 @@ def main() -> int:
         f"- Training time (s): {metrics.get('training_time_seconds', 'N/A')}",
         f"- Peak memory (MB): {metrics.get('peak_memory_mb', 'N/A')}",
         f"- bad_metrics: {metrics.get('bad_metrics', 'N/A')}",
+        f"- CPU count: {metrics.get('hardware_context', {}).get('cpu_count', 'N/A')}",
+        f"- Resolved batch size: {metrics.get('hardware_context', {}).get('resolved_batch_size', metrics.get('batch_size', 'N/A'))}",
         "",
         "## Desired Baseline (MNIST/Fashion-MNIST, 5 epochs)",
         "",

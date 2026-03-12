@@ -26,6 +26,8 @@ def test_collect_metrics_failure_payload_is_normalized(tmp_path):
     assert "dataset" in payload
     assert "training_time_seconds" in payload
     assert "train_time_seconds" not in payload
+    assert "hardware_context" in payload
+    assert payload["hardware_context"].get("cpu_count", 0) >= 1
 
 
 def test_generate_metrics_report_supports_alias_keys(tmp_path):
