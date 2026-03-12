@@ -1,4 +1,5 @@
 from src.nas import BayesianNAS, Operation, RandomSearchNAS, SearchSpace
+from src.nas import Operation, RandomSearchNAS, SearchSpace
 
 
 def test_random_search_nas_runs():

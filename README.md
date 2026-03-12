@@ -56,6 +56,7 @@ If you use this project in academic work, please cite this repository.
 - Technology-node-aware energy models (`src/hardware/energy_model.py`).
 - Compression stack (`src/compression`) with pruning and sparsity analytics.
 - NAS stack (`src/nas`) with random, evolutionary, and Bayesian-GP surrogate search.
+- NAS stack (`src/nas`) with random, evolutionary, and surrogate search.
 - Distillation stack (`src/distillation/kd.py`) for teacher-student training.
 - Advanced layers: pooling, embedding, self-attention, transformer block.
 - New losses (focal, huber, KL divergence) and optimizers (AdamW, Nadam, AdaBound).
