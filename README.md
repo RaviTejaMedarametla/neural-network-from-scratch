@@ -132,6 +132,6 @@ This project is licensed under the terms specified in the [LICENSE](LICENSE) fil
 
 Latest automated benchmark run (published only if quality gates pass):
 
-_No known good metrics are available yet._
+_No known good metrics are available yet. Try re-running metrics collection with valid dataset and hardware-optimized settings._
 
 <!-- METRICS_END -->
