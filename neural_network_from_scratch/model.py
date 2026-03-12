@@ -1,106 +1,68 @@
-"""Reference NumPy MLP implementation.
-
-This module keeps a compact educational implementation that is independent from
-higher-level training abstractions used in the rest of the package.
-"""
-
 from __future__ import annotations
 
 import numpy as np
 
 
-class NeuralNetwork:
-    """Multi-layer perceptron with ReLU hidden layers and softmax output."""
+class SimpleMLP:
+    """Tiny 1-hidden-layer MLP for binary classification."""
 
-    def __init__(self, layer_sizes, learning_rate=0.01, seed=42):
-        if len(layer_sizes) < 2:
-            raise ValueError("layer_sizes must include input and output dimensions")
+    def __init__(self, n_features: int, n_hidden: int = 16, seed: int = 42, lr: float = 0.1):
+        if n_features < 1:
+            raise ValueError("n_features must be >= 1")
+        if n_hidden < 1:
+            raise ValueError("n_hidden must be >= 1")
+        if lr <= 0:
+            raise ValueError("lr must be > 0")
 
-        self.layer_sizes = list(layer_sizes)
-        self.learning_rate = float(learning_rate)
+        self.n_features = int(n_features)
+        self.n_hidden = int(n_hidden)
+        self.lr = float(lr)
         self.rng = np.random.default_rng(int(seed))
 
-        self.weights = []
-        self.biases = []
-        for fan_in, fan_out in zip(self.layer_sizes[:-1], self.layer_sizes[1:]):
-            weight = self.rng.standard_normal((fan_in, fan_out)) * np.sqrt(2.0 / fan_in)
-            bias = np.zeros((1, fan_out), dtype=np.float64)
-            self.weights.append(weight)
-            self.biases.append(bias)
-
-        self.cache = {}
+        self.w1 = self.rng.normal(0, 0.1, size=(self.n_features, self.n_hidden))
+        self.b1 = np.zeros((1, self.n_hidden))
+        self.w2 = self.rng.normal(0, 0.1, size=(self.n_hidden, 1))
+        self.b2 = np.zeros((1, 1))
 
     @staticmethod
-    def _relu(x):
-        return np.maximum(0.0, x)
+    def _sigmoid(x: np.ndarray) -> np.ndarray:
+        return 1.0 / (1.0 + np.exp(-x))
 
-    @staticmethod
-    def _relu_derivative(x):
-        return (x > 0.0).astype(np.float64)
+    def forward(self, x: np.ndarray) -> np.ndarray:
+        x = np.asarray(x, dtype=np.float64)
+        if x.ndim != 2 or x.shape[1] != self.n_features:
+            raise ValueError("x must be 2D with shape (n_samples, n_features)")
+        h = np.tanh(x @ self.w1 + self.b1)
+        out = self._sigmoid(h @ self.w2 + self.b2)
+        return out
 
-    @staticmethod
-    def _softmax(x):
-        shifted = x - np.max(x, axis=1, keepdims=True)
-        exp_x = np.exp(shifted)
-        return exp_x / np.sum(exp_x, axis=1, keepdims=True)
+    def predict(self, x: np.ndarray) -> np.ndarray:
+        return (self.forward(x).ravel() >= 0.5).astype(np.int64)
 
-    def forward(self, X):
-        self.cache = {"a0": X}
-        activations = X
+    def fit(self, x: np.ndarray, y: np.ndarray, epochs: int = 100) -> None:
+        x = np.asarray(x, dtype=np.float64)
+        y = np.asarray(y, dtype=np.float64).reshape(-1, 1)
+        if x.shape[0] != y.shape[0]:
+            raise ValueError("x and y must have same number of rows")
 
-        for idx, (weight, bias) in enumerate(zip(self.weights, self.biases), start=1):
-            z = activations @ weight + bias
-            if idx < len(self.weights):
-                activations = self._relu(z)
-            else:
-                activations = z
-            self.cache[f"z{idx}"] = z
-            self.cache[f"a{idx}"] = activations
+        for _ in range(int(epochs)):
+            h_pre = x @ self.w1 + self.b1
+            h = np.tanh(h_pre)
+            out_pre = h @ self.w2 + self.b2
+            out = self._sigmoid(out_pre)
 
-        return self._softmax(activations)
+            d_out = (out - y) / y.shape[0]
+            dw2 = h.T @ d_out
+            db2 = np.sum(d_out, axis=0, keepdims=True)
 
-    def backward(self, X, y, probs):
-        batch_size = X.shape[0]
+            d_h = (d_out @ self.w2.T) * (1 - np.tanh(h_pre) ** 2)
+            dw1 = x.T @ d_h
+            db1 = np.sum(d_h, axis=0, keepdims=True)
 
-        delta = probs.copy()
-        delta[np.arange(batch_size), y] -= 1.0
-        delta /= batch_size
-
-        grads_w = [None] * len(self.weights)
-        grads_b = [None] * len(self.biases)
-
-        for layer_idx in reversed(range(len(self.weights))):
-            a_prev = self.cache[f"a{layer_idx}"]
-            grads_w[layer_idx] = a_prev.T @ delta
-            grads_b[layer_idx] = np.sum(delta, axis=0, keepdims=True)
-
-            if layer_idx > 0:
-                prev_z = self.cache[f"z{layer_idx}"]
-                delta = (delta @ self.weights[layer_idx].T) * self._relu_derivative(prev_z)
-
-        return grads_w, grads_b
-
-    def update(self, grads_w, grads_b):
-        for i in range(len(self.weights)):
-            self.weights[i] -= self.learning_rate * grads_w[i]
-            self.biases[i] -= self.learning_rate * grads_b[i]
-
-    def train_step(self, X_batch, y_batch):
-        probs = self.forward(X_batch)
-        grads_w, grads_b = self.backward(X_batch, y_batch, probs)
-        self.update(grads_w, grads_b)
-        return self._cross_entropy_loss(probs, y_batch)
-
-    @staticmethod
-    def _cross_entropy_loss(probs, y):
-        m = y.shape[0]
-        return float(np.mean(-np.log(probs[np.arange(m), y] + 1e-8)))
-
-    def predict(self, X):
-        return np.argmax(self.forward(X), axis=1)
-
-    def accuracy(self, X, y):
-        return float(np.mean(self.predict(X) == y))
+            self.w2 -= self.lr * dw2
+            self.b2 -= self.lr * db2
+            self.w1 -= self.lr * dw1
+            self.b1 -= self.lr * db1
 
 
-NeuralNetworkModel = NeuralNetwork
+NeuralNetwork = SimpleMLP
