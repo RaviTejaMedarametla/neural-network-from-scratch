@@ -1,32 +1,9 @@
-# Python caches
 __pycache__/
-*.py[cod]
-
-# Local virtual environments
+*.pyc
+*.pyo
 .venv/
-venv/
-
-# IDE files
-.idea/
-.vscode/
-
-# Runtime outputs and artifacts
-artifacts/*
-!artifacts/.gitkeep
-benchmarks/*.csv
-hardware_results/
-profiling/
-
-# OS metadata
-.DS_Store
-
-# Experiment outputs
-experiments/checkpoints/
-experiments/logs/
-
-# Notebook and logs
+.pytest_cache/
 .ipynb_checkpoints/
-*.log
-
-# Optional local output folders
-outputs/
+data/*
+!data/.gitkeep
+artifacts/
