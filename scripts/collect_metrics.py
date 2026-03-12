@@ -25,6 +25,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from neural_network_from_scratch.model import NeuralNetwork
+from neural_network_from_scratch.metrics_schema import normalize_metrics_payload
 
 
 def _timestamp() -> str:
@@ -95,7 +96,7 @@ def _run_training(X_train, y_train, X_test, y_test, epochs: int, batch_size: int
 
     return {
         "test_accuracy_percent": float(test_acc),
-        "train_time_seconds": float(train_time_s),
+        "training_time_seconds": float(train_time_s),
         "peak_memory_mb": float(peak_bytes / (1024**2)),
         "final_epoch_loss": float(final_epoch_loss if final_epoch_loss is not None else 0.0),
     }
@@ -126,7 +127,7 @@ def main() -> int:
         "batch_size": int(args.batch_size),
         "learning_rate": float(args.learning_rate),
         "seed": int(args.seed),
-        "data_source": "unknown",
+        "dataset": "unknown",
         "bad_metrics": False,
     }
 
@@ -136,7 +137,7 @@ def main() -> int:
             max_train=args.max_train,
             max_test=args.max_test,
         )
-        payload["data_source"] = "fashion-mnist-local-csv"
+        payload["dataset"] = "fashion-mnist-local-csv"
     except Exception as exc:
         if args.no_synthetic_fallback:
             payload.update(
@@ -144,16 +145,16 @@ def main() -> int:
                     "bad_metrics": True,
                     "error": f"dataset load failed and fallback disabled: {exc}",
                     "test_accuracy_percent": 0.0,
-                    "train_time_seconds": 0.0,
+                    "training_time_seconds": 0.0,
                     "peak_memory_mb": 0.0,
                 }
             )
-            _write_json(args.output, payload)
+            _write_json(args.output, normalize_metrics_payload(payload))
             print(f"[collect_metrics] warning: {payload['error']}")
             return 0
 
         X_train, X_test, y_train, y_test = _make_synthetic_data(seed=args.seed)
-        payload["data_source"] = "synthetic-fallback"
+        payload["dataset"] = "synthetic-fallback"
 
     try:
         measured = _run_training(
@@ -179,12 +180,12 @@ def main() -> int:
                 "bad_metrics": True,
                 "error": f"training/evaluation failed: {exc}",
                 "test_accuracy_percent": 0.0,
-                "train_time_seconds": 0.0,
+                "training_time_seconds": 0.0,
                 "peak_memory_mb": 0.0,
             }
         )
 
-    _write_json(args.output, payload)
+    _write_json(args.output, normalize_metrics_payload(payload))
     print(f"[collect_metrics] wrote metrics to {args.output}")
     return 0
 
