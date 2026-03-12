@@ -47,8 +47,7 @@ Use `HardwareProfiler` in `src/hardware/profiler.py` with predefined targets (`C
 - latency
 - energy
 
-## Citation
-If you use this project in academic work, please cite this repository.
+
 
 
 ## Phase 2 Advanced Research Features
