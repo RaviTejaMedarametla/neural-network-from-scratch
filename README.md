@@ -49,3 +49,14 @@ Use `HardwareProfiler` in `src/hardware/profiler.py` with predefined targets (`C
 
 ## Citation
 If you use this project in academic work, please cite this repository.
+
+
+## Phase 2 Advanced Research Features
+- Cycle-accurate simulation (`src/hardware/cycle_accurate.py`) with CPU + systolic array + memory controller.
+- Technology-node-aware energy models (`src/hardware/energy_model.py`).
+- Compression stack (`src/compression`) with pruning and sparsity analytics.
+- NAS stack (`src/nas`) with random, evolutionary, and surrogate search.
+- Distillation stack (`src/distillation/kd.py`) for teacher-student training.
+- Advanced layers: pooling, embedding, self-attention, transformer block.
+- New losses (focal, huber, KL divergence) and optimizers (AdamW, Nadam, AdaBound).
+- Dataset utilities, augmentations, samplers, benchmark helpers, and hardware plotting.

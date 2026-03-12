@@ -1,5 +1,8 @@
 from __future__ import annotations
-from dataclasses import dataclass, asdict
+
+from dataclasses import asdict, dataclass
+
+from .cycle_accurate import CycleAccurateHardwareModel
 
 
 @dataclass
@@ -18,8 +21,11 @@ GenericGPU = HardwareTarget("GenericGPU", mac_units=16384, clock_speed_hz=1.5e9,
 
 
 class HardwareProfiler:
+    """Profiler with both analytical and cycle-accurate modes."""
+
     def __init__(self, target: HardwareTarget = GenericGPU) -> None:
         self.target = target
+        self.cycle_model: CycleAccurateHardwareModel | None = None
         self.reset()
 
     def reset(self) -> None:
@@ -51,3 +57,11 @@ class HardwareProfiler:
         self.reset()
         self.record_op(model.flops(input_shape), model.memory_footprint())
         return self.report()
+
+    def use_cycle_accurate_model(self, model: CycleAccurateHardwareModel) -> None:
+        self.cycle_model = model
+
+    def profile_model_cycle(self, model, input_shape: tuple[int, ...]) -> dict:
+        if self.cycle_model is None:
+            raise RuntimeError("Cycle-accurate model not set")
+        return self.cycle_model.simulate_model(model, input_shape)
