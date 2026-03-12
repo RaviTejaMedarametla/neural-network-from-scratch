@@ -6,6 +6,13 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from neural_network_from_scratch.metrics_schema import normalize_metrics_payload
 
 
 def main() -> int:
@@ -17,7 +24,7 @@ def main() -> int:
     if not args.metrics.exists():
         raise FileNotFoundError(f"Metrics file not found: {args.metrics}")
 
-    metrics = json.loads(args.metrics.read_text(encoding="utf-8"))
+    metrics = normalize_metrics_payload(json.loads(args.metrics.read_text(encoding="utf-8")))
 
     lines = [
         "# Benchmark Report",
@@ -29,6 +36,14 @@ def main() -> int:
         "```json",
         json.dumps(metrics, indent=2),
         "```",
+        "",
+        "## Summary",
+        "",
+        f"- Dataset: {metrics.get('dataset', 'N/A')}",
+        f"- Accuracy (%): {metrics.get('test_accuracy_percent', 'N/A')}",
+        f"- Training time (s): {metrics.get('training_time_seconds', 'N/A')}",
+        f"- Peak memory (MB): {metrics.get('peak_memory_mb', 'N/A')}",
+        f"- bad_metrics: {metrics.get('bad_metrics', 'N/A')}",
         "",
         "## Desired Baseline (MNIST/Fashion-MNIST, 5 epochs)",
         "",

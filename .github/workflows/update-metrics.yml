@@ -8,12 +8,12 @@ on:
   workflow_dispatch:
 
 permissions:
-  # Required for committing updated README/metrics artifacts back to the repository.
   contents: write
 
 jobs:
   update-metrics:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -34,14 +34,23 @@ jobs:
       - name: Collect model metrics
         id: collect_metrics
         continue-on-error: true
+        timeout-minutes: 12
         run: |
-          # Avoid accidentally reusing stale metrics from a prior run.
           rm -f metrics.json
           python scripts/collect_metrics.py \
             --epochs 5 \
             --min-acceptable-accuracy 80.0 \
             --no-synthetic-fallback \
             --output metrics.json
+
+      - name: Ensure fallback metrics payload exists
+        if: ${{ always() }}
+        run: |
+          if [ ! -f metrics.json ]; then
+            python scripts/write_failure_metrics.py \
+              --output metrics.json \
+              --error "collect_metrics step failed or timed out"
+          fi
 
       - name: Update README metrics section
         if: ${{ always() }}
@@ -60,11 +69,7 @@ jobs:
       - name: Generate run metrics report
         if: ${{ always() }}
         run: |
-          if [ -f metrics.json ]; then
-            python scripts/generate_metrics_report.py --metrics metrics.json --output artifacts/metrics_report.md
-          else
-            echo "metrics.json not found; skipping report generation"
-          fi
+          python scripts/generate_metrics_report.py --metrics metrics.json --output artifacts/metrics_report.md
 
       - name: Optional sanity gate for low accuracy
         if: ${{ always() }}
@@ -97,29 +102,29 @@ jobs:
           print(f"Sanity gate passed: accuracy {accuracy:.4f}% >= {threshold:.2f}%")
           PY
 
-      - name: Commit and push changes
+      - name: Select files safe to commit
         if: ${{ always() }}
+        id: select_files
         run: |
-          TRACKED_FILES=(README.md metrics.json artifacts/metrics_report.md artifacts/last_good_metrics.json)
-          EXISTING_FILES=()
-          for file in "${TRACKED_FILES[@]}"; do
-            if [ -e "$file" ]; then
-              EXISTING_FILES+=("$file")
-            fi
-          done
-
-          if [ ${#EXISTING_FILES[@]} -eq 0 ]; then
-            echo "No metrics artifacts exist to commit."
-            exit 0
+          python scripts/select_metrics_commit_files.py > /tmp/metrics_files.txt
+          if [ ! -s /tmp/metrics_files.txt ]; then
+            echo "has_files=false" >> "$GITHUB_OUTPUT"
+            echo "No changed, non-ignored metrics files to commit."
+          else
+            echo "has_files=true" >> "$GITHUB_OUTPUT"
+            echo "Selected files:"
+            cat /tmp/metrics_files.txt
           fi
 
-          if git diff --quiet -- "${EXISTING_FILES[@]}"; then
-            echo "No metrics changes to commit."
-            exit 0
-          fi
-
+      - name: Commit and push changes
+        if: ${{ always() && steps.select_files.outputs.has_files == 'true' }}
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "${EXISTING_FILES[@]}"
+          xargs -a /tmp/metrics_files.txt git add --
+          if git diff --cached --quiet; then
+            echo "No staged changes after selection."
+            exit 0
+          fi
           git commit -m "docs: update performance metrics [skip ci]"
           git push
