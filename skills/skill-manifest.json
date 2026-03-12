@@ -113,5 +113,25 @@
       "examples/all_features_demo.py",
       "notebooks/advanced_hardware_sim.ipynb"
     ]
+  },
+  "hardware-research-metrics": {
+    "desc": "Use when implementing deep hardware objective metrics, roofline efficiency, EDP, and constraint-violation analysis.",
+    "overview": "Adds quantitative research metric primitives for hardware-aware optimization.",
+    "files": [
+      "src/hardware/research_metrics.py",
+      "tests/test_research_metrics.py",
+      "scripts/run_research_suite.py",
+      "docs/theory/hardware_objectives.md"
+    ]
+  },
+  "optimization-study": {
+    "desc": "Use when building ablation/ranking studies across hardware-model candidates with objective metrics.",
+    "overview": "Provides end-to-end study runners and ranking logic for optimization experiments.",
+    "files": [
+      "src/benchmark/research_suite.py",
+      "tests/test_research_suite.py",
+      "examples/hardware_optimization_study.py",
+      "artifacts/research_suite.json"
+    ]
   }
 }

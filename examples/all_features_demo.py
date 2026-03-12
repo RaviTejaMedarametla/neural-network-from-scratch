@@ -29,6 +29,12 @@ if __name__ == "__main__":
     print('cycle report', hw.simulate_model(student, (32, 16)))
 
     space = SearchSpace([Operation('dense', {'out_features': 16}), Operation('identity', {})], 2)
+    objective = lambda a: sum(1.0 for op in a.layers if op.name == 'dense')
+    arch, score = RandomSearchNAS(space, trials=5).search(objective)
+    print('nas-random', arch.signature(), score)
+
+    barch, bscore = BayesianNAS(space, warmup=4, iterations=4, candidates_per_iter=8, seed=7).search(objective)
+    print('nas-bayesian', barch.signature(), bscore)
     arch, score = RandomSearchNAS(space, trials=5).search(lambda a: -len(a.layers))
     print('nas-random', arch.signature(), score)
 

@@ -47,6 +47,8 @@ Use `HardwareProfiler` in `src/hardware/profiler.py` with predefined targets (`C
 - latency
 - energy
 
+## Citation
+If you use this project in academic work, please cite this repository.
 
 
 
@@ -72,3 +74,18 @@ Use `HardwareProfiler` in `src/hardware/profiler.py` with predefined targets (`C
 
 ## Audit
 - Current maturity and known limitations are tracked in `docs/project_status.md`.
+
+
+## Research Metrics and Hardware Objectives
+The repository now includes explicit multi-objective hardware research metrics for design optimization:
+
+- **Roofline efficiency** = achieved TOPS / peak TOPS
+- **Energy-delay product (EDP)** = energy (mJ) × latency (ms)
+- **Composite objective score** combining accuracy, latency, energy, throughput, and utilization
+- **Constraint violation analysis** for latency, energy, and utilization targets
+
+Run:
+```bash
+python scripts/run_research_suite.py
+```
+This produces `artifacts/research_suite.json` with ranked hardware/model candidates.
