@@ -1,0 +1,117 @@
+{
+  "cycle-accurate-hw": {
+    "desc": "Use when adding or modifying cycle-accurate hardware simulation (CPU/systolic/memory), energy models, and profiler integration in src/hardware.",
+    "overview": "Implements the workflow for cycle-level simulation updates and consistency checks.",
+    "files": [
+      "src/hardware/cycle_accurate.py",
+      "src/hardware/energy_model.py",
+      "src/hardware/profiler.py",
+      "src/hardware/__init__.py",
+      "tests/test_hardware_cycle.py",
+      "examples/cycle_accurate_demo.py",
+      "docs/theory/cycle_accurate_simulation.md"
+    ]
+  },
+  "compression-pruning": {
+    "desc": "Use when implementing pruning, sparsity metrics, and sparse speedup analysis.",
+    "overview": "Guides compression research changes and pruning-related validation.",
+    "files": [
+      "src/compression/pruning.py",
+      "src/compression/sparsity.py",
+      "tests/test_compression.py",
+      "examples/pruning_example.py",
+      "docs/theory/pruning.md"
+    ]
+  },
+  "nas": {
+    "desc": "Use when modifying neural architecture search search-space and search algorithms under hardware constraints.",
+    "overview": "Covers random/evolutionary/surrogate NAS updates and evaluation hooks.",
+    "files": [
+      "src/nas/search_space.py",
+      "src/nas/random_search.py",
+      "src/nas/evolutionary.py",
+      "src/nas/bayesian.py",
+      "tests/test_nas.py",
+      "examples/nas_hardware_search.py",
+      "docs/theory/nas.md"
+    ]
+  },
+  "distillation": {
+    "desc": "Use when adding teacher-student distillation workflows and KL-based supervision.",
+    "overview": "Maintains distillation utilities and test coverage.",
+    "files": [
+      "src/distillation/kd.py",
+      "tests/test_distillation.py",
+      "examples/distillation_example.py",
+      "docs/theory/distillation.md"
+    ]
+  },
+  "advanced-layers": {
+    "desc": "Use when implementing advanced layers including pooling, embedding, attention, and transformer blocks.",
+    "overview": "Defines layer design patterns and backward-pass expectations for advanced architectures.",
+    "files": [
+      "src/layers/pooling.py",
+      "src/layers/embedding.py",
+      "src/layers/attention.py",
+      "src/layers/transformer.py",
+      "src/layers/__init__.py",
+      "tests/test_layers_advanced.py",
+      "examples/transformer_example.py"
+    ]
+  },
+  "losses-extra": {
+    "desc": "Use when adding or tuning advanced losses (focal/huber/kldiv) and their exports/tests.",
+    "overview": "Ensures loss additions are exported and numerically stable in tests.",
+    "files": [
+      "src/losses/focal.py",
+      "src/losses/huber.py",
+      "src/losses/kldiv.py",
+      "src/losses/__init__.py",
+      "tests/test_losses_advanced.py"
+    ]
+  },
+  "optimizers-extra": {
+    "desc": "Use when adding advanced optimizers (AdamW/Nadam/AdaBound) and integration tests.",
+    "overview": "Standardizes optimizer API and state update semantics.",
+    "files": [
+      "src/optimizers/adamw.py",
+      "src/optimizers/nadam.py",
+      "src/optimizers/adabound.py",
+      "src/optimizers/__init__.py",
+      "tests/test_optimizers_advanced.py"
+    ]
+  },
+  "data-extra": {
+    "desc": "Use when extending datasets, augmentation transforms, and sampling utilities.",
+    "overview": "Maintains offline dataset fallbacks and augmentation pipelines.",
+    "files": [
+      "src/data/datasets.py",
+      "src/data/augmentation.py",
+      "src/data/sampler.py",
+      "src/data/__init__.py",
+      "tests/test_data_augmentation.py",
+      "examples/data_augmentation_demo.py"
+    ]
+  },
+  "benchmark": {
+    "desc": "Use when adding hardware benchmarking and Pareto visualization workflows.",
+    "overview": "Keeps benchmark helpers and plotting tools aligned for architecture comparison.",
+    "files": [
+      "src/benchmark/hardware_bench.py",
+      "src/benchmark/compare_frameworks.py",
+      "src/visualizer/hardware_plots.py",
+      "tests/test_benchmark.py",
+      "examples/pareto_analysis.py"
+    ]
+  },
+  "integration": {
+    "desc": "Use when wiring all feature modules together, updating README, and creating end-to-end demos.",
+    "overview": "Integration checklist for exports, docs, requirements, and final smoke runs.",
+    "files": [
+      "README.md",
+      "requirements.txt",
+      "examples/all_features_demo.py",
+      "notebooks/advanced_hardware_sim.ipynb"
+    ]
+  }
+}
