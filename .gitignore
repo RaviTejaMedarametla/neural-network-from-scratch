@@ -1,4 +1,8 @@
 __pycache__/
 *.pyc
+*.pyo
 .venv/
-artifacts/result.json
+.pytest_cache/
+.ipynb_checkpoints/
+data/*
+!data/.gitkeep

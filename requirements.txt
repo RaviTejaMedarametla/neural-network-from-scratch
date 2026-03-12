@@ -1,3 +1,5 @@
-numpy>=1.26
-pydantic>=2.5
-pytest>=8.0
+numpy>=1.20
+matplotlib
+pytest
+scipy
+tqdm

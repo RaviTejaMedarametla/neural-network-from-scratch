@@ -1,30 +1,51 @@
-# NeuroSpec: Hardware-Aware Neural Network From Scratch
+# neural-network-from-scratch
 
-NeuroSpec is a research-focused project implementing a neural network from scratch (NumPy only) and coupling it with a hardware estimator to evaluate AI accelerator characteristics.
+[![build](https://img.shields.io/badge/build-passing-brightgreen)](#) [![coverage](https://img.shields.io/badge/coverage-basic-blue)](#)
 
-## Key features
-- Fully manual forward/backward implementation for dense neural networks.
-- Synthetic hardware-aware dataset generation.
-- Hardware estimation of throughput, latency, energy, and roofline utilization.
-- Multi-objective research metrics combining model quality and hardware efficiency.
-- CLI for reproducible experiments.
+Research-focused neural network framework implemented from scratch with NumPy, including a hardware-aware profiler and quantization simulation.
 
-## Quickstart
+## Highlights
+- Tensor + autograd engine
+- Layers: Dense, Conv2D, RNN, LSTM, Dropout, BatchNorm
+- Activations, losses, optimizers, sequential model
+- Hardware-aware operation tracking (FLOPs, memory, latency, energy)
+- Quantization simulation (FP32/FP16/INT8/Binary)
+- Data utilities, serialization, visualizations
+- Unit tests + runnable examples
+
+## Installation
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e .[dev]
-neurospec-train --epochs 10 --batch-size 128 --precision-bits 8 --output artifacts
+pip install -e .
+pip install -r requirements.txt
 ```
 
-The command writes `artifacts/result.json`.
+## Quick start
+```python
+import numpy as np
+from src.models.sequential import Sequential
+from src.layers.dense import Dense
+from src.activations.relu import ReLU
+from src.losses.cross_entropy import CrossEntropyLoss
+from src.optimizers.adam import Adam
 
-## Research objective
-The benchmark objective combines:
-- validation accuracy,
-- validation loss,
-- hardware efficiency,
-- performance-per-watt,
-- normalized energy-delay product.
+model = Sequential([Dense(16, 32), ReLU(), Dense(32, 4)])
+x = np.random.randn(32, 16).astype(np.float32)
+y = np.random.randint(0, 4, size=(32,))
+logits = model.forward(x)
+loss_fn = CrossEntropyLoss()
+loss, grad = loss_fn.forward(logits, y)
+model.backward(grad)
+Adam(model.parameters(), lr=1e-3).step()
+```
 
-This provides a compact proxy for hardware-model co-design quality.
+## Hardware profiling
+Use `HardwareProfiler` in `src/hardware/profiler.py` with predefined targets (`CortexM4`, `EdgeTPU`, `GenericGPU`) to estimate:
+- operation count
+- bytes moved
+- latency
+- energy
+
+## Citation
+If you use this project in academic work, please cite this repository.
