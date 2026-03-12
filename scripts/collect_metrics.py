@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import time
 import tracemalloc
 from datetime import datetime, timezone
@@ -25,10 +26,33 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from neural_network_from_scratch.model import NeuralNetwork
+from neural_network_from_scratch.metrics_schema import normalize_metrics_payload
 
 
 def _timestamp() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _detect_cpu_count() -> int:
+    return max(1, int(os.cpu_count() or 1))
+
+
+def _resolve_batch_size(requested_batch_size: int, n_samples: int, cpu_count: int, auto_optimize: bool) -> int:
+    requested = max(1, int(requested_batch_size))
+    if not auto_optimize:
+        return requested
+
+    # Deterministic CPU-aware heuristic: increase batch size for larger machines.
+    if cpu_count >= 16:
+        tuned = max(requested, 256)
+    elif cpu_count >= 8:
+        tuned = max(requested, 128)
+    elif cpu_count >= 4:
+        tuned = max(requested, 96)
+    else:
+        tuned = requested
+
+    return min(tuned, max(1, int(n_samples)))
 
 
 def _load_fashion_mnist_from_repo(data_dir: Path, max_train: int | None = None, max_test: int | None = None):
@@ -95,7 +119,7 @@ def _run_training(X_train, y_train, X_test, y_test, epochs: int, batch_size: int
 
     return {
         "test_accuracy_percent": float(test_acc),
-        "train_time_seconds": float(train_time_s),
+        "training_time_seconds": float(train_time_s),
         "peak_memory_mb": float(peak_bytes / (1024**2)),
         "final_epoch_loss": float(final_epoch_loss if final_epoch_loss is not None else 0.0),
     }
@@ -118,16 +142,22 @@ def main() -> int:
     parser.add_argument("--min-acceptable-accuracy", type=float, default=80.0)
     parser.add_argument("--output", type=Path, default=Path("metrics.json"))
     parser.add_argument("--no-synthetic-fallback", action="store_true")
+    parser.add_argument("--auto-optimize-batch-size", action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
 
+    cpu_count = _detect_cpu_count()
     payload = {
         "generated_at_utc": _timestamp(),
         "epochs": int(args.epochs),
         "batch_size": int(args.batch_size),
         "learning_rate": float(args.learning_rate),
         "seed": int(args.seed),
-        "data_source": "unknown",
+        "dataset": "unknown",
         "bad_metrics": False,
+        "hardware_context": {
+            "cpu_count": cpu_count,
+            "auto_optimized_batch_size": bool(args.auto_optimize_batch_size),
+        },
     }
 
     try:
@@ -136,7 +166,7 @@ def main() -> int:
             max_train=args.max_train,
             max_test=args.max_test,
         )
-        payload["data_source"] = "fashion-mnist-local-csv"
+        payload["dataset"] = "fashion-mnist-local-csv"
     except Exception as exc:
         if args.no_synthetic_fallback:
             payload.update(
@@ -144,16 +174,25 @@ def main() -> int:
                     "bad_metrics": True,
                     "error": f"dataset load failed and fallback disabled: {exc}",
                     "test_accuracy_percent": 0.0,
-                    "train_time_seconds": 0.0,
+                    "training_time_seconds": 0.0,
                     "peak_memory_mb": 0.0,
                 }
             )
-            _write_json(args.output, payload)
+            _write_json(args.output, normalize_metrics_payload(payload))
             print(f"[collect_metrics] warning: {payload['error']}")
             return 0
 
         X_train, X_test, y_train, y_test = _make_synthetic_data(seed=args.seed)
-        payload["data_source"] = "synthetic-fallback"
+        payload["dataset"] = "synthetic-fallback"
+
+    resolved_batch_size = _resolve_batch_size(
+        requested_batch_size=int(args.batch_size),
+        n_samples=int(X_train.shape[0]),
+        cpu_count=cpu_count,
+        auto_optimize=bool(args.auto_optimize_batch_size),
+    )
+    payload["batch_size"] = resolved_batch_size
+    payload["hardware_context"]["resolved_batch_size"] = int(resolved_batch_size)
 
     try:
         measured = _run_training(
@@ -162,7 +201,7 @@ def main() -> int:
             X_test=X_test,
             y_test=y_test,
             epochs=args.epochs,
-            batch_size=args.batch_size,
+            batch_size=resolved_batch_size,
             learning_rate=args.learning_rate,
             seed=args.seed,
         )
@@ -179,12 +218,12 @@ def main() -> int:
                 "bad_metrics": True,
                 "error": f"training/evaluation failed: {exc}",
                 "test_accuracy_percent": 0.0,
-                "train_time_seconds": 0.0,
+                "training_time_seconds": 0.0,
                 "peak_memory_mb": 0.0,
             }
         )
 
-    _write_json(args.output, payload)
+    _write_json(args.output, normalize_metrics_payload(payload))
     print(f"[collect_metrics] wrote metrics to {args.output}")
     return 0
 

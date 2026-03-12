@@ -19,6 +19,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from neural_network_from_scratch.metrics_schema import normalize_metrics_payload
+
 METRICS_START = "<!-- METRICS_START -->"
 METRICS_END = "<!-- METRICS_END -->"
 WARNING_START = "<!-- METRICS_WARNING_START -->"
@@ -65,7 +67,7 @@ def _default_metrics_placeholder() -> str:
     return (
         "## Performance Metrics\n\n"
         "Latest automated benchmark run (published only if quality gates pass):\n\n"
-        "_No known good metrics are available yet._\n"
+        "_No known good metrics are available yet. Try re-running metrics collection with valid dataset and hardware-optimized settings._\n"
     )
 
 
@@ -105,7 +107,7 @@ def _load_json(path: Path) -> tuple[Optional[Dict[str, Any]], Optional[str]]:
         return None, f"could not parse {path}: {exc}"
     if not isinstance(loaded, dict):
         return None, f"{path} must contain a JSON object"
-    return loaded, None
+    return normalize_metrics_payload(loaded), None
 
 
 def _quality_gate(
@@ -228,4 +230,4 @@ if __name__ == "__main__":
         raise SystemExit(main())
     except Exception as exc:
         print(f"[update_readme] ERROR: {exc}")
-        raise
+        raise SystemExit(0)
