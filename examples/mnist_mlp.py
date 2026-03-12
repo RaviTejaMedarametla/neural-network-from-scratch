@@ -2,6 +2,8 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 import numpy as np
+
+np.random.seed(7)
 from src.data.dataset import MNIST
 from src.data.dataloader import DataLoader
 from src.models.sequential import Sequential

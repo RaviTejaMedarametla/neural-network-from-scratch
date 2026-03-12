@@ -4,6 +4,8 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 import numpy as np
 
+np.random.seed(7)
+
 from src.distillation import Distiller
 from src.layers import Dense
 from src.models.sequential import Sequential

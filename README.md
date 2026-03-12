@@ -60,3 +60,11 @@ If you use this project in academic work, please cite this repository.
 - Advanced layers: pooling, embedding, self-attention, transformer block.
 - New losses (focal, huber, KL divergence) and optimizers (AdamW, Nadam, AdaBound).
 - Dataset utilities, augmentations, samplers, benchmark helpers, and hardware plotting.
+
+
+## Research Highlights
+- Hardware-aware design metrics are first-class (FLOPs, bytes, latency, energy).
+- Cycle-accurate simulation path supports CPU + systolic + memory co-analysis.
+- Compression toolkit includes pruning/sparsity with speedup estimation.
+- NAS and distillation workflows target accuracy-efficiency trade-offs.
+- All simulator assumptions are documented and intended to be extensible.

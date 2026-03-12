@@ -4,6 +4,8 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 import numpy as np
 
+np.random.seed(7)
+
 from src.hardware.quantization import Quantizer, quantization_error
 
 

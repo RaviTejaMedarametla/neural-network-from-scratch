@@ -26,6 +26,7 @@ class TensorDataset(Dataset):
 
 
 class MNIST(TensorDataset):
+    """Synthetic MNIST-like dataset for offline environments."""
     """Synthetic placeholder MNIST-like dataset for offline environments."""
     def __init__(self, n: int = 1024, seed: int = 0) -> None:
         rng = np.random.default_rng(seed)

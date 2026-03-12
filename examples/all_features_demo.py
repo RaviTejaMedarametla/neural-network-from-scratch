@@ -4,6 +4,8 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 import numpy as np
 
+np.random.seed(7)
+
 from src.compression.pruning import Pruner
 from src.distillation import Distiller
 from src.hardware import CycleAccurateHardwareModel, MemoryController, SimpleCPU, SystolicArray
