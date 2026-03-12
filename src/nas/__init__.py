@@ -14,3 +14,6 @@ __all__ = [
     "BayesianNAS",
     "SurrogateNAS",
 ]
+from .bayesian import SurrogateNAS
+
+__all__ = ["Architecture", "Operation", "SearchSpace", "RandomSearchNAS", "EvolutionaryNAS", "SurrogateNAS"]

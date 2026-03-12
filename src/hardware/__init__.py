@@ -39,3 +39,5 @@ from .research_metrics import (
 )
 
 __all__.extend(["calibration_table", "estimate_from_table", "HardwareConstraint", "HardwareObjectiveWeights", "ResearchMetricBundle", "build_metric_bundle", "constraint_violations", "energy_delay_product", "objective_score", "roofline_efficiency"])
+
+__all__.extend(["calibration_table", "estimate_from_table"])

@@ -11,3 +11,5 @@ __all__ = [
     "HardwareOptimizationStudy",
     "StudyResult",
 ]
+
+__all__ = ["benchmark_on_hardware", "pareto_frontier", "compare_numpy_backends"]

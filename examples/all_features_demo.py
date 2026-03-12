@@ -12,6 +12,7 @@ from src.hardware import CycleAccurateHardwareModel, MemoryController, SimpleCPU
 from src.layers import Dense
 from src.models.sequential import Sequential
 from src.nas import BayesianNAS, Operation, RandomSearchNAS, SearchSpace
+from src.nas import Operation, RandomSearchNAS, SearchSpace
 from src.optimizers.adam import Adam
 
 
@@ -34,3 +35,9 @@ if __name__ == "__main__":
 
     barch, bscore = BayesianNAS(space, warmup=4, iterations=4, candidates_per_iter=8, seed=7).search(objective)
     print('nas-bayesian', barch.signature(), bscore)
+    arch, score = RandomSearchNAS(space, trials=5).search(lambda a: -len(a.layers))
+    print('nas-random', arch.signature(), score)
+
+    barch, bscore = BayesianNAS(space, warmup=4, iterations=4, candidates_per_iter=8, seed=7).search(lambda a: -len(a.layers))
+    print('nas-bayesian', barch.signature(), bscore)
+    print('nas', arch.signature(), score)

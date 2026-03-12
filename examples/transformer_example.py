@@ -9,6 +9,7 @@ np.random.seed(7)
 from src.layers import Embedding, TransformerBlock
 from src.losses.mse import MSELoss
 from src.optimizers.adam import Adam
+from src.layers import Embedding, TransformerBlock
 
 
 def main() -> None:
@@ -31,6 +32,7 @@ def main() -> None:
     opt.zero_grad()
 
     print("transformer output", y.shape, "loss", loss)
+    print("transformer output", y.shape)
 
 
 if __name__ == "__main__":
