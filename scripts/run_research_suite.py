@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 import sys
@@ -10,9 +11,27 @@ import numpy as np
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from src.benchmark import HardwareOptimizationStudy
+from src.hardware import CycleAccurateHardwareModel, GenericGPU, HardwareProfiler, MemoryController, SimpleCPU, SystolicArray
+from src.layers import Dense
+from src.models.sequential import Sequential
+
+
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run hardware research suite")
+    parser.add_argument("--use-cycle-model", action="store_true", help="Attach cycle-accurate hardware simulation")
+    return parser.parse_args()
+
+
+def _profile_reference_model(use_cycle_model: bool) -> dict:
+    model = Sequential([Dense(16, 32), Dense(32, 8)])
+    profiler = HardwareProfiler(GenericGPU)
+    if use_cycle_model:
+        profiler.set_cycle_model(CycleAccurateHardwareModel(SimpleCPU(), SystolicArray(), MemoryController()))
+    return profiler.profile_model(model, (4, 16))
 
 
 def main() -> None:
+    args = _parse_args()
     np.random.seed(7)
     study = HardwareOptimizationStudy()
 
@@ -30,6 +49,8 @@ def main() -> None:
     payload = {
         "summary": summary,
         "ranked": [r.__dict__ for r in ranked],
+        "reference_profile": _profile_reference_model(args.use_cycle_model),
+        "cycle_model_enabled": bool(args.use_cycle_model),
     }
 
     outdir = Path("artifacts")

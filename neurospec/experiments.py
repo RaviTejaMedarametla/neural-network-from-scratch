@@ -10,6 +10,7 @@ from .config import ExperimentConfig
 from .data import SyntheticHardwareDataset
 from .hardware import HardwareEstimator, hardware_efficiency_score
 from .training import TrainResult, Trainer
+from src.hardware import build_metric_bundle
 
 
 @dataclass(slots=True)
@@ -86,11 +87,21 @@ def run_research_experiment(config: ExperimentConfig, output_dir: str | Path = "
 
     research = evaluate_research_metrics(train_result, hw_report.to_dict(), hw_eff)
 
+    objective_bundle = build_metric_bundle(
+        accuracy=train_result.final_val_accuracy,
+        latency_ms=hw_report.estimated_latency_ms,
+        energy_mj=hw_report.estimated_energy_mj_per_batch,
+        throughput_sps=hw_report.estimated_throughput_samples_s,
+        utilization=float(np.mean([l.utilization for l in hw_report.layer_stats])),
+        achieved_tops=hw_report.achieved_tops,
+        peak_tops=max(hw_report.roofline_tops, 1e-9),
+    )
+
     result = ExperimentResult(
         config=asdict(config),
         train=train_result.to_dict(),
         hardware=hw_report.to_dict(),
-        research_metrics=asdict(research),
+        research_metrics={**asdict(research), "hardware_objectives": asdict(objective_bundle)},
     )
 
     output_path = Path(output_dir)

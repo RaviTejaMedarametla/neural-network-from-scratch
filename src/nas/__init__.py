@@ -1,19 +1,16 @@
 """Neural architecture search exports."""
 
-from .search_space import Architecture, Operation, SearchSpace
-from .random_search import RandomSearchNAS
+from .search_space import SearchSpace, Operation, Architecture
 from .evolutionary import EvolutionaryNAS
 from .bayesian import BayesianNAS, SurrogateNAS
+from .random_search import RandomSearchNAS
 
 __all__ = [
-    "Architecture",
-    "Operation",
     "SearchSpace",
-    "RandomSearchNAS",
+    "Operation",
+    "Architecture",
     "EvolutionaryNAS",
     "BayesianNAS",
     "SurrogateNAS",
+    "RandomSearchNAS",
 ]
-from .bayesian import SurrogateNAS
-
-__all__ = ["Architecture", "Operation", "SearchSpace", "RandomSearchNAS", "EvolutionaryNAS", "SurrogateNAS"]
