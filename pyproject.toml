@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "neurospec"
+name = "neural-network-from-scratch"
 version = "0.1.0"
 description = "Research-oriented hardware-aware neural network from scratch"
 readme = "README.md"
@@ -15,6 +15,7 @@ dev = ["pytest>=8.0", "ruff>=0.5"]
 
 [project.scripts]
 neurospec-train = "neurospec.cli:main"
+train = "scripts.run_research_suite:main"
 
 [tool.pytest.ini_options]
 addopts = "-q"

@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 import numpy as np
+
 from .base import Layer
 
 
@@ -20,7 +22,7 @@ class Conv2D(Layer):
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         self.x = x
-        n, c, h, w = x.shape
+        n, _, h, w = x.shape
         k = self.kernel_size
         oh = (h + 2 * self.padding - k) // self.stride + 1
         ow = (w + 2 * self.padding - k) // self.stride + 1
@@ -28,7 +30,9 @@ class Conv2D(Layer):
         xp = np.pad(x, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)))
         for i in range(oh):
             for j in range(ow):
-                region = xp[:, :, i*self.stride:i*self.stride+k, j*self.stride:j*self.stride+k]
+                hs = i * self.stride
+                ws = j * self.stride
+                region = xp[:, :, hs : hs + k, ws : ws + k]
                 out[:, :, i, j] = np.tensordot(region, self.w, axes=((1, 2, 3), (1, 2, 3)))
         if self.b is not None:
             out += self.b[None, :, None, None]
@@ -36,10 +40,35 @@ class Conv2D(Layer):
 
     def backward(self, grad: np.ndarray) -> np.ndarray:
         assert self.x is not None
+        x = self.x
+        n, _, h, w = x.shape
+        k = self.kernel_size
+        oh = grad.shape[2]
+        ow = grad.shape[3]
+
+        xp = np.pad(x, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)))
+        dxp = np.zeros_like(xp)
         self.dw.fill(0.0)
+
         if self.db is not None:
             self.db = grad.sum(axis=(0, 2, 3))
-        return np.zeros_like(self.x)
+
+        for i in range(oh):
+            for j in range(ow):
+                hs = i * self.stride
+                ws = j * self.stride
+                region = xp[:, :, hs : hs + k, ws : ws + k]
+
+                self.dw += np.tensordot(grad[:, :, i, j], region, axes=((0,), (0,)))
+                dxp[:, :, hs : hs + k, ws : ws + k] += np.tensordot(
+                    grad[:, :, i, j],
+                    self.w,
+                    axes=((1,), (0,)),
+                )
+
+        if self.padding > 0:
+            return dxp[:, :, self.padding : self.padding + h, self.padding : self.padding + w]
+        return dxp
 
     def parameters(self) -> list[dict[str, np.ndarray]]:
         p = [{"param": self.w, "grad": self.dw}]
@@ -55,4 +84,7 @@ class Conv2D(Layer):
         return int(n * oh * ow * self.out_channels * self.in_channels * k * k * 2)
 
     def memory_footprint(self) -> int:
-        return int(self.w.nbytes + self.dw.nbytes + (0 if self.b is None else self.b.nbytes))
+        total = self.w.nbytes + self.dw.nbytes
+        if self.b is not None and self.db is not None:
+            total += self.b.nbytes + self.db.nbytes
+        return int(total)

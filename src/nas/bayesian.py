@@ -19,12 +19,7 @@ class GPHyperParams:
 
 
 class BayesianNAS:
-    """Bayesian optimization NAS with a small RBF-kernel GP surrogate.
-
-    Notes:
-        This implementation intentionally targets small architecture spaces and
-        lightweight experiments. It uses expected improvement as acquisition.
-    """
+    """Bayesian optimization NAS with a small RBF-kernel GP surrogate."""
 
     def __init__(
         self,
@@ -41,20 +36,11 @@ class BayesianNAS:
         self.candidates_per_iter = candidates_per_iter
         self.rng = np.random.default_rng(seed)
         self.gp = gp_params or GPHyperParams()
-class SurrogateNAS:
-    """Lightweight surrogate NAS (random features + linear regressor)."""
-
-    def __init__(self, search_space: SearchSpace, warmup: int = 20, iterations: int = 40, seed: int = 0) -> None:
-        self.search_space = search_space
-        self.warmup = warmup
-        self.iterations = iterations
-        self.rng = np.random.default_rng(seed)
 
     def _featurize(self, arch: Architecture) -> np.ndarray:
         ops = [op.name for op in arch.layers]
         uniq = sorted({op.name for op in self.search_space.operations})
 
-        # Bag-of-ops + position-aware histogram.
         bag = np.zeros((len(uniq),), dtype=np.float64)
         pos = np.zeros((len(uniq), len(ops)), dtype=np.float64)
         for i, op in enumerate(ops):
@@ -75,12 +61,17 @@ class SurrogateNAS:
     def _fit_gp(self, x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         k_xx = self._rbf_kernel(x, x)
         k_xx += np.eye(k_xx.shape[0]) * self.gp.noise_variance
-        # Cholesky for stability.
         l = np.linalg.cholesky(k_xx + 1e-9 * np.eye(k_xx.shape[0]))
         alpha = np.linalg.solve(l.T, np.linalg.solve(l, y))
         return l, alpha
 
-    def _predict_gp(self, x_train: np.ndarray, l: np.ndarray, alpha: np.ndarray, x_star: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def _predict_gp(
+        self,
+        x_train: np.ndarray,
+        l: np.ndarray,
+        alpha: np.ndarray,
+        x_star: np.ndarray,
+    ) -> tuple[np.ndarray, np.ndarray]:
         k_xs = self._rbf_kernel(x_train, x_star)
         mean = k_xs.T @ alpha
 
@@ -89,12 +80,17 @@ class SurrogateNAS:
         var = np.maximum(k_ss_diag - np.sum(v * v, axis=0), 1e-12)
         return mean, var
 
-    def _expected_improvement(self, mean: np.ndarray, var: np.ndarray, best: float, xi: float = 0.01) -> np.ndarray:
+    def _expected_improvement(
+        self,
+        mean: np.ndarray,
+        var: np.ndarray,
+        best: float,
+        xi: float = 0.01,
+    ) -> np.ndarray:
         sigma = np.sqrt(np.maximum(var, 1e-12))
         improve = mean - best - xi
         z = improve / sigma
 
-        # Normal CDF/PDF via erf.
         cdf = 0.5 * (1.0 + np.vectorize(math.erf)(z / np.sqrt(2.0)))
         pdf = (1.0 / np.sqrt(2.0 * np.pi)) * np.exp(-0.5 * z * z)
         ei = improve * cdf + sigma * pdf
@@ -104,7 +100,6 @@ class SurrogateNAS:
         observed_arch: list[Architecture] = []
         observed_y: list[float] = []
 
-        # Warmup random evaluations.
         for _ in range(self.warmup):
             arch = Architecture(self.search_space.sample(self.rng))
             observed_arch.append(arch)
@@ -137,39 +132,4 @@ class SurrogateNAS:
         return best_arch, best_score
 
 
-# Backward-compatible alias retained for existing imports.
 SurrogateNAS = BayesianNAS
-        feats = np.zeros((len(ops), len(uniq)), dtype=np.float64)
-        for i, op in enumerate(ops):
-            feats[i, uniq.index(op)] = 1.0
-        return feats.mean(axis=0)
-
-    def search(self, fitness_fn) -> tuple[Architecture, float]:
-        candidates: list[Architecture] = []
-        y: list[float] = []
-        for _ in range(self.warmup):
-            a = Architecture(self.search_space.sample(self.rng))
-            candidates.append(a)
-            y.append(float(fitness_fn(a)))
-
-        X = np.stack([self._featurize(a) for a in candidates])
-        w = np.linalg.pinv(X) @ np.array(y)
-
-        best_idx = int(np.argmax(y))
-        best_arch, best_score = candidates[best_idx], y[best_idx]
-
-        for _ in range(self.iterations):
-            pool = [Architecture(self.search_space.sample(self.rng)) for _ in range(32)]
-            pool_x = np.stack([self._featurize(a) for a in pool])
-            pred = pool_x @ w
-            chosen = pool[int(np.argmax(pred))]
-            score = float(fitness_fn(chosen))
-
-            candidates.append(chosen)
-            y.append(score)
-            X = np.stack([self._featurize(a) for a in candidates])
-            w = np.linalg.pinv(X) @ np.array(y)
-            if score > best_score:
-                best_arch, best_score = chosen, score
-
-        return best_arch, float(best_score)

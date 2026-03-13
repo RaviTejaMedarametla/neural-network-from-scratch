@@ -21,7 +21,7 @@ GenericGPU = HardwareTarget("GenericGPU", mac_units=16384, clock_speed_hz=1.5e9,
 
 
 class HardwareProfiler:
-    """Profiler with both analytical and cycle-accurate modes."""
+    """Profiler with both analytical and optional cycle-accurate modes."""
 
     def __init__(self, target: HardwareTarget = GenericGPU) -> None:
         self.target = target
@@ -53,13 +53,23 @@ class HardwareProfiler:
             "energy_j": self.estimate_energy_j(),
         }
 
+    def set_cycle_model(self, cycle_model: CycleAccurateHardwareModel) -> None:
+        self.cycle_model = cycle_model
+
+    def use_cycle_accurate_model(self, model: CycleAccurateHardwareModel) -> None:
+        self.set_cycle_model(model)
+
     def profile_model(self, model, input_shape: tuple[int, ...]) -> dict:
         self.reset()
         self.record_op(model.flops(input_shape), model.memory_footprint())
-        return self.report()
+        analytical = self.report()
+        if self.cycle_model is None:
+            return analytical
 
-    def use_cycle_accurate_model(self, model: CycleAccurateHardwareModel) -> None:
-        self.cycle_model = model
+        cycle = self.cycle_model.simulate_model(model, input_shape)
+        out = dict(analytical)
+        out["cycle_accurate"] = cycle
+        return out
 
     def profile_model_cycle(self, model, input_shape: tuple[int, ...]) -> dict:
         if self.cycle_model is None:

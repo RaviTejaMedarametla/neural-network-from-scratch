@@ -1,5 +1,4 @@
 from src.nas import BayesianNAS, Operation, RandomSearchNAS, SearchSpace
-from src.nas import Operation, RandomSearchNAS, SearchSpace
 
 
 def test_random_search_nas_runs():
@@ -22,7 +21,6 @@ def test_bayesian_nas_runs():
     nas = BayesianNAS(space, warmup=6, iterations=6, candidates_per_iter=12, seed=3)
 
     def fitness(arch):
-        # Prefer more dense operations than identity in this synthetic objective.
         score = 0.0
         for op in arch.layers:
             score += 1.0 if op.name == "dense" else 0.0
