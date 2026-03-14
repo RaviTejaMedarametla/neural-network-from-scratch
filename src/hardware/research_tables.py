@@ -1,3 +1,5 @@
+"""Auto-generated deterministic calibration tables for hardware what-if analysis."""
+
 from __future__ import annotations
 
 """Large research lookup tables for hardware what-if analysis.
