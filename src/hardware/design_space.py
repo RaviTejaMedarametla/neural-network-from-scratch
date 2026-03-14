@@ -1,3 +1,5 @@
+"""Auto-generated deterministic design points for hardware sweeps."""
+
 from __future__ import annotations
 from dataclasses import dataclass
 import math
