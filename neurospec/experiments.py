@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import platform
+import subprocess
+import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -33,6 +36,22 @@ class ExperimentResult:
     def to_json(self) -> str:
         return json.dumps(asdict(self), indent=2)
 
+
+
+
+def _safe_git_commit() -> str:
+    try:
+        return subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+    except Exception:
+        return "unknown"
+
+
+def _pip_freeze() -> list[str]:
+    try:
+        out = subprocess.check_output([sys.executable, "-m", "pip", "freeze"], text=True)
+        return [line for line in out.splitlines() if line]
+    except Exception:
+        return []
 
 def _objective(metrics: ResearchMetrics) -> float:
     return (
@@ -107,5 +126,15 @@ def run_research_experiment(config: ExperimentConfig, output_dir: str | Path = "
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
     (output_path / "result.json").write_text(result.to_json())
+
+    repro = {
+        "python_version": sys.version,
+        "platform": platform.platform(),
+        "seed": config.training.seed,
+        "pythonhashseed": str(config.training.seed),
+        "git_commit": _safe_git_commit(),
+        "pip_freeze": _pip_freeze(),
+    }
+    (output_path / "reproducibility.json").write_text(json.dumps(repro, indent=2))
 
     return result
