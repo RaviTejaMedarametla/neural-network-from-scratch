@@ -4,7 +4,9 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 import numpy as np
 
-np.random.seed(7)
+from src.utils import set_global_seed
+
+set_global_seed(7)
 
 from src.layers import Embedding, TransformerBlock
 from src.losses.mse import MSELoss

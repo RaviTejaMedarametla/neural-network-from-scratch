@@ -3,12 +3,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import platform
+import subprocess
 from pathlib import Path
 import sys
 
 import numpy as np
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
+
+from src.utils import set_global_seed
 
 from src.benchmark import HardwareOptimizationStudy
 from src.hardware import CycleAccurateHardwareModel, GenericGPU, HardwareProfiler, MemoryController, SimpleCPU, SystolicArray
@@ -22,6 +26,36 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+
+
+def _safe_git_commit() -> str:
+    try:
+        return subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+    except Exception:
+        return "unknown"
+
+
+def _pip_freeze() -> list[str]:
+    try:
+        out = subprocess.check_output([sys.executable, "-m", "pip", "freeze"], text=True)
+        return [line for line in out.splitlines() if line]
+    except Exception:
+        return []
+
+
+def _write_repro_manifest(outdir: Path, seed: int) -> Path:
+    payload = {
+        "python_version": sys.version,
+        "platform": platform.platform(),
+        "seed": seed,
+        "pythonhashseed": str(seed),
+        "git_commit": _safe_git_commit(),
+        "pip_freeze": _pip_freeze(),
+    }
+    out = outdir / "reproducibility.json"
+    out.write_text(json.dumps(payload, indent=2))
+    return out
+
 def _profile_reference_model(use_cycle_model: bool) -> dict:
     model = Sequential([Dense(16, 32), Dense(32, 8)])
     profiler = HardwareProfiler(GenericGPU)
@@ -32,7 +66,7 @@ def _profile_reference_model(use_cycle_model: bool) -> dict:
 
 def main() -> None:
     args = _parse_args()
-    np.random.seed(7)
+    set_global_seed(7)
     study = HardwareOptimizationStudy()
 
     candidates = [
@@ -57,9 +91,11 @@ def main() -> None:
     outdir.mkdir(exist_ok=True)
     out = outdir / "research_suite.json"
     out.write_text(json.dumps(payload, indent=2))
+    repro = _write_repro_manifest(outdir, seed=7)
 
     print(json.dumps(payload, indent=2))
     print(f"wrote: {out.resolve()}")
+    print(f"wrote: {repro.resolve()}")
 
 
 if __name__ == "__main__":

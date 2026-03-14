@@ -3,7 +3,9 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 import numpy as np
 
-np.random.seed(7)
+from src.utils import set_global_seed
+
+set_global_seed(7)
 from src.models.sequential import Sequential
 from src.layers.dense import Dense
 from src.activations.leaky_relu import LeakyReLU

@@ -4,7 +4,9 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 import numpy as np
 
-np.random.seed(7)
+from src.utils import set_global_seed
+
+set_global_seed(7)
 
 from src.hardware import CycleAccurateHardwareModel, MemoryController, SimpleCPU, SystolicArray
 from src.nas import Operation, RandomSearchNAS, SearchSpace
