@@ -18,7 +18,7 @@ def test_conv_shape():
     assert y.shape == (2, 4, 8, 8)
 
 
-def test_conv2d_backward_matches_finite_difference_weight_and_input():
+def test_conv2d_backward_matches_finite_difference_weight_bias_and_input():
     np.random.seed(0)
     x = np.random.randn(1, 1, 4, 4).astype(np.float32)
     conv = Conv2D(1, 1, 3, stride=1, padding=1, bias=True)
@@ -29,7 +29,6 @@ def test_conv2d_backward_matches_finite_difference_weight_and_input():
 
     eps = 1e-3
 
-    # Weight gradient check for one element.
     wi = (0, 0, 1, 1)
     old_w = conv.w[wi]
     conv.w[wi] = old_w + eps
@@ -40,7 +39,16 @@ def test_conv2d_backward_matches_finite_difference_weight_and_input():
     num_dw = (lp - lm) / (2 * eps)
     assert np.isclose(conv.dw[wi], num_dw, rtol=2e-2, atol=2e-2)
 
-    # Input gradient check for one element.
+    bi = 0
+    old_b = conv.b[bi]
+    conv.b[bi] = old_b + eps
+    lp = float(np.sum(conv.forward(x) * grad_out))
+    conv.b[bi] = old_b - eps
+    lm = float(np.sum(conv.forward(x) * grad_out))
+    conv.b[bi] = old_b
+    num_db = (lp - lm) / (2 * eps)
+    assert np.isclose(conv.db[bi], num_db, rtol=2e-2, atol=2e-2)
+
     xi = (0, 0, 2, 2)
     old_x = x[xi]
     x[xi] = old_x + eps

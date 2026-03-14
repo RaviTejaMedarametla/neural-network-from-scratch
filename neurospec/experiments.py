@@ -87,6 +87,7 @@ def run_research_experiment(config: ExperimentConfig, output_dir: str | Path = "
 
     research = evaluate_research_metrics(train_result, hw_report.to_dict(), hw_eff)
 
+    # Also compute the standard hardware objective bundle
     objective_bundle = build_metric_bundle(
         accuracy=train_result.final_val_accuracy,
         latency_ms=hw_report.estimated_latency_ms,
@@ -94,7 +95,7 @@ def run_research_experiment(config: ExperimentConfig, output_dir: str | Path = "
         throughput_sps=hw_report.estimated_throughput_samples_s,
         utilization=float(np.mean([l.utilization for l in hw_report.layer_stats])),
         achieved_tops=hw_report.achieved_tops,
-        peak_tops=max(hw_report.roofline_tops, 1e-9),
+        peak_tops=hw_report.roofline_tops,
     )
 
     result = ExperimentResult(

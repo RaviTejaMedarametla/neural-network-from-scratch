@@ -12,7 +12,6 @@ from .search_space import Architecture, SearchSpace
 @dataclass
 class GPHyperParams:
     """Hyperparameters for the lightweight Gaussian Process surrogate."""
-
     length_scale: float = 1.0
     signal_variance: float = 1.0
     noise_variance: float = 1e-4
@@ -131,5 +130,5 @@ class BayesianNAS:
 
         return best_arch, best_score
 
-
+# Alias for backward compatibility
 SurrogateNAS = BayesianNAS

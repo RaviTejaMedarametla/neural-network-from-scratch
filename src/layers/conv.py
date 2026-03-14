@@ -6,7 +6,9 @@ from .base import Layer
 
 
 class Conv2D(Layer):
-    def __init__(self, in_channels: int, out_channels: int, kernel_size: int, stride: int = 1, padding: int = 0, bias: bool = True, dtype: str = "float32") -> None:
+    def __init__(self, in_channels: int, out_channels: int, kernel_size: int,
+                 stride: int = 1, padding: int = 0, bias: bool = True,
+                 dtype: str = "float32") -> None:
         super().__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -22,7 +24,7 @@ class Conv2D(Layer):
 
     def forward(self, x: np.ndarray) -> np.ndarray:
         self.x = x
-        n, _, h, w = x.shape
+        n, c, h, w = x.shape
         k = self.kernel_size
         oh = (h + 2 * self.padding - k) // self.stride + 1
         ow = (w + 2 * self.padding - k) // self.stride + 1
@@ -32,7 +34,7 @@ class Conv2D(Layer):
             for j in range(ow):
                 hs = i * self.stride
                 ws = j * self.stride
-                region = xp[:, :, hs : hs + k, ws : ws + k]
+                region = xp[:, :, hs:hs + k, ws:ws + k]
                 out[:, :, i, j] = np.tensordot(region, self.w, axes=((1, 2, 3), (1, 2, 3)))
         if self.b is not None:
             out += self.b[None, :, None, None]
@@ -41,33 +43,38 @@ class Conv2D(Layer):
     def backward(self, grad: np.ndarray) -> np.ndarray:
         assert self.x is not None
         x = self.x
-        n, _, h, w = x.shape
+        n, c, h, w = x.shape
         k = self.kernel_size
-        oh = grad.shape[2]
-        ow = grad.shape[3]
+        oh, ow = grad.shape[2], grad.shape[3]
 
-        xp = np.pad(x, ((0, 0), (0, 0), (self.padding, self.padding), (self.padding, self.padding)))
+        if self.padding > 0:
+            xp = np.pad(x, ((0,0),(0,0),(self.padding,self.padding),(self.padding,self.padding)))
+        else:
+            xp = x
         dxp = np.zeros_like(xp)
         self.dw.fill(0.0)
-
-        if self.db is not None:
-            self.db = grad.sum(axis=(0, 2, 3))
 
         for i in range(oh):
             for j in range(ow):
                 hs = i * self.stride
                 ws = j * self.stride
-                region = xp[:, :, hs : hs + k, ws : ws + k]
+                region = xp[:, :, hs:hs+k, ws:ws+k]          # (n, c, k, k)
 
-                self.dw += np.tensordot(grad[:, :, i, j], region, axes=((0,), (0,)))
-                dxp[:, :, hs : hs + k, ws : ws + k] += np.tensordot(
-                    grad[:, :, i, j],
-                    self.w,
-                    axes=((1,), (0,)),
-                )
+                # gradient w.r.t. weights
+                grad_slice = grad[:, :, i, j]                 # (n, out_channels)
+                region_flat = region.reshape(n, c*k*k)        # (n, c*k*k)
+                self.dw += (region_flat.T @ grad_slice).reshape(self.w.shape)
+
+                # gradient w.r.t. input
+                w_reshaped = self.w.reshape(self.out_channels, c*k*k)  # (out_channels, c*k*k)
+                grad_in_region = (grad_slice @ w_reshaped).reshape(n, c, k, k)
+                dxp[:, :, hs:hs+k, ws:ws+k] += grad_in_region
+
+        if self.db is not None:
+            self.db = grad.sum(axis=(0,2,3))
 
         if self.padding > 0:
-            return dxp[:, :, self.padding : self.padding + h, self.padding : self.padding + w]
+            return dxp[:, :, self.padding:-self.padding, self.padding:-self.padding]
         return dxp
 
     def parameters(self) -> list[dict[str, np.ndarray]]:
